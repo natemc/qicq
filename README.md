@@ -54,6 +54,7 @@ cout << where/(0==til/5%2) << '\n'; // 0 2 4
 Containers are functions, so you can index a vec or dict using operator():
 
 ```
+cout << v("abcdefghij")(4) << '\n';                   // e
 cout << v("abcdefghij")(v((1,3,5),v(2,4,6))) << '\n'; // bdf ceg
 cout << v(v(0,1,2),v(3,4,5))(1,1) << '\n';            // 4
 cout << v(v(0,1,2),v(3,4,5))(v(0,1),v(0,2)) << '\n';  // (0 2) (3 5)
