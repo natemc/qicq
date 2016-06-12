@@ -10,7 +10,7 @@ qicq_lambda.h has a few macros for creating lambdas in a qish way:
 #include <qicq_lambda.h>
 using std::cout;
 
-auto f = L2(x+y);       // L2 is a 2-arg lambda with args x and y
+auto f = L2(x+y);       // L2 creates a 2-arg lambda with args x and y
 cout << f(2,3) << '\n'; // 5
 ```
 
