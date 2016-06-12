@@ -91,7 +91,7 @@ Indexing, arithmetic, and relational operators support dicts.  Tuples are mostly
 ```
 auto p = [](const sym& s, double x){
   std::ostringstream os; os << s << ':' << x; return os.str();};
-cout << apply(p, t(s("pi"), 3.14)) << '\n'; // pi:3.14
+cout << p/apply/t(s("pi"),3.14) << '\n'; // pi:3.14
 ```
 
 Further support throughout the library for these grows as I need it.
