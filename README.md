@@ -27,7 +27,7 @@ using std::cout;
 cout << 2/L2(x+y)/3 << '\n'; // 5
 ```
 
-Support for pointers to functions, etc may be added soon if I need it.  Adding support for monadic (unary) functions in general requires c++17's is_callable trait, but the qicq function objects all support similar syntax:
+Adding support for monadic (unary) function objects in general requires c++17's is_callable trait, but the qicq function objects all support similar syntax:
 
 ```
 cout << til/5 << '\n'; // 0 1 2 3 4
