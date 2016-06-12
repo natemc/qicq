@@ -1,5 +1,5 @@
 # qicq
-qicq is a C++ library inspired by q.  qicq depends on boost (any and hana), and the Makefile is currently mac-specific.
+qicq ("kick") is a C++ library inspired by q.  qicq depends on boost (any and hana), and the Makefile is currently mac-specific.
 
 ## Lambdas
 
