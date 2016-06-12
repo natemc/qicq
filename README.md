@@ -1,5 +1,5 @@
 # qicq
-C++ library inspired by q.  qicq depends on boost (any and hana), and the Makefile is currently mac-specific.
+qicq is a C++ library inspired by q.  qicq depends on boost (any and hana), and the Makefile is currently mac-specific.
 
 ## Lambdas
 
@@ -59,7 +59,7 @@ cout << v("abcdefghij")/at/v((1,3,5),v(2,4,6)) << '\n'; // bdf ceg
 
 ## Adverbs
 
-qicq supports the 7 adverbs of k and q:
+qicq supports the 7 adverbs of q:
 
 ```
 cout << L1(2*x)/each/til(5) << '\n';                     // 0 2 4 6 8
