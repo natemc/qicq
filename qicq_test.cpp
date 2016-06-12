@@ -487,5 +487,7 @@ int main (int argc, const char* argv[]) {
   //  return EXIT_SUCCESS;
 
   cout << 1_b << 0_b << '\n';
+  auto f = many(L3(x+y+z));
+  cout << f(v(1,2,3),v(10,20,30),v(100,200,300)) << '\n';
   return run_tests();
 }

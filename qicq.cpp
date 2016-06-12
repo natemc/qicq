@@ -7,6 +7,7 @@ namespace qicq {
   detail::EachLeft  left;
   detail::EachRight right;
   detail::EachBoth  both;
+  detail::EachMany  many;
   detail::EachPrior prior;
   detail::Over      over;
   detail::Scan      scan;

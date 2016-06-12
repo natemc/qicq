@@ -635,7 +635,26 @@ namespace qicq {
         return BoundEachBoth<F>(std::forward<F>(f));
       }
     };
-  
+
+    template <class F>
+    struct BoundEachMany {
+      F f;
+      BoundEachMany(const F& f_): f(f_) {}
+
+      template <class T, class... U>
+      auto operator()(const vec<T>& x, const vec<U>&... y) const {
+        vec<int64_t> i(x.size());
+        std::iota(std::begin(i), std::end(i), 0);
+	return Each()([&](int64_t j){return f(x[j], y[j]...);})(i);
+      }
+    };
+    struct EachMany: Adverb {
+      template <class F>
+      auto operator()(F&& f) const {
+	return BoundEachMany<F>(std::forward<F>(f));
+      }
+    };
+    
     template <class F>
     struct BoundEachPrior {
       F f;
@@ -2017,6 +2036,7 @@ namespace qicq {
   extern detail::EachLeft  left;
   extern detail::EachRight right;
   extern detail::EachBoth  both;
+  extern detail::EachMany  many;
   extern detail::EachPrior prior;
   extern detail::Over      over;
   extern detail::Scan      scan;
