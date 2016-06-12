@@ -29,16 +29,18 @@ namespace {
   
 ////////////////////////////////////////////////////////////////////////////////
   hunit::testcase adverb_tests[] = {
+  // cout << raze(v("abc")/join/right/left/v("def")) << '\n';
+  // cout << typeid(v("abc")/join/right/left/v("def")).name() << '\n';
     "each calls its lhs once for every element of its rhs", []{
       ASSERT(all/(v(0,2,4,6,8) == L1(2*x)/each/(til(5))));},
     "each works with all", []{
-      ASSERT(all/(v(true,false) == all/each/v(v(true,true),v(true,false))));},
+      ASSERT(all/(10_b == all/each/v(11_b,10_b)));},
     "right calls its lhs once for every element of its rhs", []{
       ASSERT(all/conv/(v(v(0,0,0),v(0,1,2),v(0,2,4)) ==
 		       til/3/L2(x*y)/right/til(3)));},
     "left&right stack to make cross", []{
       ASSERT_MATCH(v(v(.12,.22),v(.22,.32)),
-      		   L1(x/std::plus<double>()/left/right/x)(v(.1,.2)-.04));},
+      		   L1(x/L2(x+y)/left/right/x)(v(.1,.2)-.04));},
     "both iterates over the lhs and rhs in parallel", []{
       ASSERT_MATCH(v(v(1,4),v(2,5),v(3,6)), v(1,2,3)/join/both/v(4,5,6));},
     "f/over/atom returns atom", []{
@@ -63,11 +65,10 @@ namespace {
 
   hunit::testcase all_tests[] = {
     "all is atomic", []{
-      ASSERT_MATCH(v(false,true,false),
-		   all/v(v(true,true,true),v(false,true,false)));},
+      ASSERT_MATCH(010_b, all/v(111_b,010_b));},
     "all can be applied monadically", []{
-      ASSERT(all/v(true,true,true));
-      ASSERT(!(all/v(true,false,true)));
+      ASSERT(all/111_b);
+      ASSERT(!(all/101_b));
     },
   };
   
@@ -101,6 +102,21 @@ namespace {
   hunit::testcase desc_tests[] = {
     "desc/vec sorts vec desc", []{
       ASSERT_MATCH(v(8,6,4,3,2,1,0), desc/v(3,8,4,6,2,0,1));},
+  };
+
+  hunit::testcase dict_tests[] = {
+    "arithmetic on dicts is atomic", []{
+      ASSERT_MATCH(d(v("abc"),v(0,2,4)), 2*d(v("abc"),v(0,1,2)));
+      ASSERT_MATCH(d(v("abc"),v(0,3,6)), d(v("abc"),v(0,1,2))*3);
+      ASSERT_MATCH(d(v("abc"),v(3,6,9)), v(3,5,7)+d(v("abc"),v(0,1,2)));
+      ASSERT_MATCH(d(v("abc"),v(2,5,8)), d(v("abc"),v(0,1,2))+v(2,4,6));
+    },
+    "relops on dicts are atomic", []{
+      ASSERT_MATCH(d(v("abc"),001_b), 2==d(v("abc"),v(0,1,2)));
+      ASSERT_MATCH(d(v("abc"),110_b), d(v("abc"),v(0,1,2))!=2);
+      ASSERT_MATCH(d(v("abc"),100_b), v(3,5,7)<d(v("abc"),v(4,5,6)));
+      ASSERT_MATCH(d(v("abc"),001_b), d(v("abc"),v(3,6,9))>v(8,8,8));
+    },
   };
   
   hunit::testcase distinct_tests[] = {
@@ -164,7 +180,7 @@ namespace {
       ASSERT(!(8/in/til(5)));
     },
     "lhs/in/vec follows the shape of lhs", []{
-      ASSERT_MATCH(v(v(true,false),v(false,true)), v(v(3,8),v(5,2))/in/til(5));
+      ASSERT_MATCH(v(10_b,01_b), v(v(3,8),v(5,2))/in/til(5));
     },
   };
   
@@ -240,9 +256,8 @@ namespace {
 
   hunit::testcase not_tests[] = {
     "! is atomic", []{
-      ASSERT_MATCH(v(false, true), !v(true, false));
-      ASSERT_MATCH(v(v(false,true),v(true,false)),
-		   !v(v(true,false),v(false,true)));
+      ASSERT_MATCH(01_b, !10_b);
+      ASSERT_MATCH(v(01_b,10_b), !v(10_b,01_b));
     },
   };
   
@@ -297,7 +312,7 @@ namespace {
   
   hunit::testcase sum_tests[] = {
     "sum/vec sums vec", []{ASSERT_MATCH(16, sum/v(8,3,5));},
-    "sum can sum bools", []{ASSERT_MATCH(2, sum/v(true,true));},
+    "sum can sum bools", []{ASSERT_MATCH(2, sum/11_b);},
     "sum is atomic", []{ASSERT_MATCH(v(3,7,11), sum/v(v(1,3,5),v(2,4,6)));},
   };
   
@@ -337,6 +352,15 @@ namespace {
       ASSERT(all((v(0,3,6) == til/3*3)));},
     "double*vec<int> promotes & multiplies each element of vec by atom", []{
       ASSERT(all((v(0,1.5,3,4.5,6) == 1.5*til(5))));},
+    "vecs are functions", []{
+      ASSERT_MATCH('d', v("abcdef")(3));
+      ASSERT_MATCH(v("bdf"), v("abcdef")(v(1,3,5)));
+      ASSERT_MATCH(3, v(v(0,1,2),v(3,4,5))(1,0));
+      ASSERT_MATCH(v(3,5), v(v(0,1,2),v(3,4,5))(1,v(0,2)));
+      ASSERT_MATCH(v(0,3), v(v(0,1,2),v(3,4,5))(v(0,1),0));
+      ASSERT_MATCH(v(v(0,2),v(3,5)), v(v(0,1,2),v(3,4,5))(v(0,1),v(0,2)));
+      ASSERT_MATCH(v("gc"), v(2,0)/(v(3,3)/take/v("abcdefghi")/both)/v(0,2));
+    },
   };
 
   hunit::testcase union_tests[] = {
@@ -346,7 +370,7 @@ namespace {
   
   hunit::testcase where_tests[] = {
     "where/vec<bool> returns the indices in vec that are true", []{
-      ASSERT_MATCH(v(0LL,2), where/v(true,false,true));
+      ASSERT_MATCH(v(0LL,2), where/101_b);
       ASSERT_MATCH(v(0LL,2,4), where/(0==til/5%2));
     },
     "where/vec<integral> is x#'!#x", []{
@@ -366,6 +390,7 @@ namespace {
       at_tests,
       cut_tests,
       desc_tests,
+      dict_tests,
       distinct_tests,
       drop_tests,
       enlist_tests,
@@ -399,13 +424,13 @@ namespace {
   }
 } // namespace
 
-int main (int argc, const char* argv[]) {
+int main (int argc, const char* argv[]) {  
   // TODO automate these and write a bunch more
   /*
   //    V1(cout<<x<<' ')/each/til(3); cout << '\n';
   cout << deltas/v(8,3,5) << '\n';
-  cout << 0/std::plus<int>()/over/v(false,false) << '\n';
-  cout << 0/L2(x+y)/over/v(true,true) << '\n';
+  cout << 0/std::plus<int>()/over/00_b << '\n';
+  cout << 0/L2(x+y)/over/11_b << '\n';
   cout << avg/v(8,3,5) << '\n';
   cout << differ/v(3,3,3) << '\n';
   sym foo("foo");
@@ -413,18 +438,16 @@ int main (int argc, const char* argv[]) {
   cout << foo << '\t' << bar << '\n';
   debug_syms(cout);
   cout << (sym("foo") == foo) << (sym("bar") == bar) << '\n';
-  cout << ("foo"_m == sym("foo")) << '\n';
-  cout << d(v("a"_m,"bb"_m,"c"_m),v(1,2,3));
-  cout << d(v("a"_m,"b"_m,"c"_m),v(1,2,3))+10;
-  cout << d(v("a"_m,"b"_m,"c"_m),v(1,2,3))+v(10,20,30);
-  cout << d(v("a"_m,"b"_m,"c"_m),v(1,2,3))+
-  d(v("d"_m,"b"_m,"c"_m),v(10,20,30));
-  cout << (d(v("a"_m,"b"_m,"c"_m),v(1,2,3))<
-  d(v("d"_m,"b"_m,"c"_m),v(10,20,30)));
-  cout << at(d(v("a"_m,"b"_m,"c"_m),v(1,2,3)), "b"_m) << '\n';
-  V1(cout<<x<<'*')/each/d(v("a"_m,"bb"_m,"c"_m),v(1,2,3)); cout<<'\n';
-  cout << asc/d(v("a"_m,"b"_m,"c"_m),v(3,2,1));
-  cout << d(v("a"_m,"b"_m,"c"_m),v(3,2,1))/join/d(v("b"_m,"d"_m),v(10,20));
+  cout << ("foo"_s == sym("foo")) << '\n';
+  cout << d(v("a"_s,"bb"_s,"c"_s),v(1,2,3));
+  cout << d(v("a"_s,"b"_s,"c"_s),v(1,2,3))+10;
+  cout << d(v("a"_s,"b"_s,"c"_s),v(1,2,3))+v(10,20,30);
+  cout << (d(v("a"_s,"b"_s,"c"_s),v(1,2,3))<
+  d(v("d"_s,"b"_s,"c"_s),v(10,20,30)));
+  cout << at(d(v("a"_s,"b"_s,"c"_s),v(1,2,3)), "b"_s) << '\n';
+  V1(cout<<x<<'*')/each/d(v("a"_s,"bb"_s,"c"_s),v(1,2,3)); cout<<'\n';
+  cout << asc/d(v("a"_s,"b"_s,"c"_s),v(3,2,1));
+  cout << d(v("a"_s,"b"_s,"c"_s),v(3,2,1))/join/d(v("b"_s,"d"_s),v(10,20));
   cout << "++++++++++++++++++++++++++++++++++++++++\n";
   V1(cout<<x<<'*')/each/t(v(1,2,3),string("abc")); cout << '\n';
   cout << L1(x.size())/each/t(v(1,2,3),string("abc")) << '\n';
@@ -435,16 +458,21 @@ int main (int argc, const char* argv[]) {
   cout << -5/L2(x-y)/prior/t(1,1,2,3,5,8) << '\n';
   cout << last/t(3.14,"foo") << '\n';
 
-  auto p = [](const char *s, double x){
-    ostringstream os; os << s << ':' << x; return os.str();};
-  cout << apply(p, t("ack", 3.14)) << '\n';
   cout << L2(x+y)/apply/t(3,4) << '\n';
   cout << max/apply/std::make_pair(3,4.5) << '\n';
 
-  cout << group/d(s/each/v("abcdefghijklmnopqrst"),
-		  v(4,0,2,1,2,1,2,3,2,4,1,0,2,4,1,2,0,1,1,2));
-
   cout << cos(til/10) << '\n';
   */
+  
+  // run_tests();
+  // cout << group/d(s/each/v("abcdefghijklmnopqrst"),
+  // 		  v(4,0,2,1,2,1,2,3,2,4,1,0,2,4,1,2,0,1,1,2));
+  // auto p = [](const char* s, double x){
+  //   ostringstream os; os << s << ':' << x; return os.str();};
+  // cout << p/apply/t("ack", 3.14) << '\n';
+  // cout << d(v("a"_s,"b"_s,"c"_s),v(1,2,3)) +
+  //   d(v("d"_s,"b"_s,"c"_s),v(10,20,30));
+  //  return EXIT_SUCCESS;
+  
   return run_tests();
 }
