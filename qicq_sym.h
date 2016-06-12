@@ -20,7 +20,7 @@ namespace qicq {
     friend bool operator==(const sym& x, const sym& y);
     friend std::ostream& operator<<(std::ostream& os, const sym& s);
   };
-  inline sym operator""_m(const char* s, size_t n) { return sym(s,n); }
+  inline sym operator""_s(const char* s, size_t n) { return sym(s,n); }
   
   inline bool operator==(const sym& x, const sym& y) { return x.i==y.i; }
   inline bool operator!=(const sym& x, const sym& y) { return !(x==y); }
