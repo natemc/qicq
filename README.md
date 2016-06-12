@@ -80,9 +80,11 @@ The match function (which conv uses) does fuzzy matching for doubles.
 
 ## Containers
 
+```
 auto a = v(1,2,3);                 // vec<int>
 auto b = d(v("a"_m,"b"_m),v(1,2)); // dict<sym,int>
 auto c = t(1,"abc");               // tuple<int,const char*>
+```
 
 Indexing, arithmetic, and relational operators support dicts.  Tuples are mostly experimental at this point, but you can apply a function to a tuple of arguments:
 
