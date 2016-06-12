@@ -150,10 +150,11 @@ namespace qicq {
   private:
     std::vector<char> v;
   };
+  // TODO distinguish 0_b and 1_b as atoms from 00_b etc as vecs
   inline vec<bool> operator""_b(const char* s) {
     const int n = strlen(s);
     vec<bool> r(n);
-    std::transform(s, s+n, std::begin(r), [](char c){return '1'==c;});
+    std::transform(s, s+n, std::begin(r), [](char c){return '0'!=c;});
     return r;
   }
 

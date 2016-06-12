@@ -105,17 +105,29 @@ namespace {
   };
 
   hunit::testcase dict_tests[] = {
-    "arithmetic on dicts is atomic", []{
+    "arithmetic on dict w/atom or vec is atomic", []{
       ASSERT_MATCH(d(v("abc"),v(0,2,4)), 2*d(v("abc"),v(0,1,2)));
       ASSERT_MATCH(d(v("abc"),v(0,3,6)), d(v("abc"),v(0,1,2))*3);
       ASSERT_MATCH(d(v("abc"),v(3,6,9)), v(3,5,7)+d(v("abc"),v(0,1,2)));
       ASSERT_MATCH(d(v("abc"),v(2,5,8)), d(v("abc"),v(0,1,2))+v(2,4,6));
     },
-    "relops on dicts are atomic", []{
+    "relop on dict w/atom or vec is atomic", []{
       ASSERT_MATCH(d(v("abc"),001_b), 2==d(v("abc"),v(0,1,2)));
       ASSERT_MATCH(d(v("abc"),110_b), d(v("abc"),v(0,1,2))!=2);
       ASSERT_MATCH(d(v("abc"),100_b), v(3,5,7)<d(v("abc"),v(4,5,6)));
       ASSERT_MATCH(d(v("abc"),001_b), d(v("abc"),v(3,6,9))>v(8,8,8));
+    },
+    "arithmetic on dict/dict merges keys", []{
+      ASSERT_MATCH(d(v("abcd"),v(1,3,5,7)),
+		   d(v("abc"),v(1,2,3)) + d(v("bcd"),v(1,2,7)));
+    },
+    "dicts are functions", []{
+      ASSERT_MATCH(3LL, d(v("abcde"),til/5)('d'));
+      ASSERT_MATCH(v(1LL,3), d(v("abcde"),til/5)(v("bd")));
+      ASSERT_MATCH(1LL, d(v("abcde"),til/each/til(5))('d',1));
+      ASSERT_MATCH(v(0LL,2), d(v("abcde"),til/each/til(5))('d',v(0,2)));
+      auto e = d(v("abcde"),til/5/rot/left/til(5));
+      ASSERT_MATCH(v(v(1LL,3),v(3LL,0)), e(v("bd"),v(0,2)));
     },
   };
   
@@ -473,6 +485,7 @@ int main (int argc, const char* argv[]) {
   // cout << d(v("a"_s,"b"_s,"c"_s),v(1,2,3)) +
   //   d(v("d"_s,"b"_s,"c"_s),v(10,20,30));
   //  return EXIT_SUCCESS;
-  
+
+  cout << 1_b << 0_b << '\n';
   return run_tests();
 }
