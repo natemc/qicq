@@ -86,7 +86,19 @@ auto b = d(v("a"_m,"b"_m),v(1,2)); // dict<sym,int>
 auto c = t(1,"abc");               // tuple<int,const char*>
 ```
 
-Indexing, arithmetic, and relational operators support dicts.  Tuples are mostly experimental at this point, but you can apply a function to a tuple of arguments:
+Indexing, arithmetic, and relational operators support dicts.  Most of the functions implemented so far also support dicts:
+
+```
+cout << group/d(s/each/v("abcdefghijklmnopqrst"),
+                v(4,0,2,1,2,1,2,3,2,4,1,0,2,4,1,2,0,1,1,2));
+// 4| a j n
+// 0| b l q
+// 2| c e g i m p t
+// 1| d f k o r s
+// 3| ,h
+```
+
+Tuples are mostly experimental at this point and have limited support.  However, while you can't apply a function to a vec (yet), you can apply a function to a tuple:
 
 ```
 auto p = [](const sym& s, double x){
