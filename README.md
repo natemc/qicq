@@ -89,9 +89,9 @@ auto c = t(1,"abc");               // tuple<int,const char*>
 Indexing, arithmetic, and relational operators support dicts.  Tuples are mostly experimental at this point, but you can apply a function to a tuple of arguments:
 
 ```
-auto p = [](const char* s, double x){
+auto p = [](const sym& s, double x){
   std::ostringstream os; os << s << ':' << x; return os.str();};
-cout << apply(p, t("ack", 3.14)) << '\n'; // ack 3.14
+cout << apply(p, t(s("pi"), 3.14)) << '\n'; // pi:3.14
 ```
 
 Further support throughout the library for these grows as I need it.
