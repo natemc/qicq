@@ -60,7 +60,7 @@ cout << v(v(0,1,2),v(3,4,5))(1,1) << '\n';            // 4
 cout << v(v(0,1,2),v(3,4,5))(v(0,1),v(0,2)) << '\n';  // (0 2) (3 5)
 ```
 
-You cannot use / for indexing in this way, because / in this context means atomic division.  However, you can apply an adverb to a container using /, e.g
+You cannot use / for indexing in this way, because / in this context means atomic division.  However, you can apply an adverb to a container using / e.g.
 
 ```
 auto x = v(3,3)/take/v("abcdefghi");          // abc def ghi
