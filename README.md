@@ -51,7 +51,22 @@ cout << where/(0==til/5%2) << '\n'; // 0 2 4
 
 ## Indexing
 
-qicq's containers can be indexed by containers using the at function:
+Containers are functions, so you can index a vec or dict using operator():
+
+```
+cout << v("abcdefghij")(v((1,3,5),v(2,4,6))) << '\n'; // bdf ceg
+cout << v(v(0,1,2),v(3,4,5))(1,1) << '\n';            // 4
+cout << v(v(0,1,2),v(3,4,5))(v(0,1),v(0,2)) << '\n';  // (0 2) (3 5)
+```
+
+You cannot use / for indexing in this way, because / in this context means atomic division.  However, you can apply an adverb to a container using /, e.g
+
+```
+auto x = v(3,3)/take/v("abcdefghi");          // abc def ghi
+assert(v(2,0)/(x/both)/v(0,2)/match/v("gc"));
+```
+
+qicq's containers can also be indexed using the at function:
 
 ```
 cout << v("abcdefghij")/at/v((1,3,5),v(2,4,6)) << '\n'; // bdf ceg
@@ -106,7 +121,19 @@ auto p = [](const sym& s, double x){
 cout << p/apply/t(s("pi"),3.14) << '\n'; // pi:3.14
 ```
 
-Further support throughout the library for these grows as I need it.
+## Literals
+
+You can create a symbol via either the s function or the _s literal:
+
+```
+assert(s("xyzzy") == "xyzzy"_s);
+```
+
+You can create a vec<bool> using _b:
+
+```
+assert(v(true,false,true) == 101_b);
+```
 
 ## Which functions are implemented?
 
