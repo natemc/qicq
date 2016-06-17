@@ -1,5 +1,4 @@
 #include <qicq/qicq.h>
-using namespace std;
 
 namespace qicq {
   detail::Converge  conv;

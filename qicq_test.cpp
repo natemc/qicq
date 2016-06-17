@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 #include <qicq/qicq.h>
+#include <qicq/qicq_fun.h>
 #include <qicq/qicq_lambda.h>
 #include <qicq/qicq_math.h>
 #include <qicq/qicq_sym.h>
@@ -32,35 +33,35 @@ namespace {
   // cout << raze(v("abc")/join/right/left/v("def")) << '\n';
   // cout << typeid(v("abc")/join/right/left/v("def")).name() << '\n';
     "each calls its lhs once for every element of its rhs", []{
-      ASSERT(all/(v(0,2,4,6,8) == L1(2*x)/each/(til(5))));},
+      ASSERT(all/=v(0,2,4,6,8) == (L1(2*x)/each/=til/5));},
     "each works with all", []{
       ASSERT(all/(10_b == all/each/v(11_b,10_b)));},
     "right calls its lhs once for every element of its rhs", []{
-      ASSERT(all/conv/(v(v(0,0,0),v(0,1,2),v(0,2,4)) ==
-		       til/3/L2(x*y)/right/til(3)));},
+      ASSERT(all/conv/=v(v(0,0,0),v(0,1,2),v(0,2,4))/eq/=
+    	     til/3/L2(x*y)/right/=til/3);},
     "left&right stack to make cross", []{
       ASSERT_MATCH(v(v(.12,.22),v(.22,.32)),
       		   L1(x/L2(x+y)/left/right/x)(v(.1,.2)-.04));},
     "both iterates over the lhs and rhs in parallel", []{
       ASSERT_MATCH(v(v(1,4),v(2,5),v(3,6)), v(1,2,3)/join/both/v(4,5,6));},
     "f/over/atom returns atom", []{
-      ASSERT_MATCH(42, std::plus<int>()/over/42);},
+      ASSERT_MATCH(42, plus/over/42);},
     "f/over/vec reduces f over vec", []{
-      ASSERT_MATCH(45LL, L2(x+y)/over/til(10))},
+      ASSERT_MATCH(45LL, L2(x+y)/over/=til/10)},
     "atom/f/over/vec reduces f over vec with atom as the initial value", []{
-      ASSERT_MATCH(47, 2/std::plus<int>()/over/til(10))},
+      ASSERT_MATCH(47LL, 2/plus/over/=til/10)},
     "f/prior/vec computes f(vec[i],vec[i-1])", []{
-      ASSERT_MATCH(v(8,-5,2), std::minus<int>()/prior/v(8,3,5));},
+      ASSERT_MATCH(v(8,-5,2), minus/prior/v(8,3,5));},
     "atom/f/prior/vec computes f(vec[i],vec[i-1]) w/initial value atom", []{
-      ASSERT_MATCH(v(4,-5,2), 4/std::minus<int>()/prior/v(8,3,5));},
+      ASSERT_MATCH(v(4,-5,2), 4/minus/prior/v(8,3,5));},
     "f/scan/atom returns atom", []{
-      ASSERT_MATCH(42, std::plus<int>()/scan/42);},
+      ASSERT_MATCH(42, plus/scan/42);},
     "f/scan/vec returns the prefix (f) over vec", []{
       // TODO investigate why the result is not v(0LL,...)
-      ASSERT_MATCH(v(0,1,3,6,10), std::plus<int>()/scan/til(5));},
+      ASSERT_MATCH(v(0LL,1,3,6,10), plus/scan/=til/5);},
     "atom/f/scan/vec returns the prefix (f) over vec w/initial value atom", []{
       // TODO investigate why the result is not v(2LL,...)
-      ASSERT_MATCH(v(2,3,5,8,12), 2/std::plus<int>()/scan/til(5));},
+      ASSERT_MATCH(v(2LL,3,5,8,12), 2/plus/scan/=til/5);},
   };
 
   hunit::testcase all_tests[] = {
@@ -95,7 +96,7 @@ namespace {
       ASSERT_MATCH(v(v(0LL,1,2,3),v(4LL,5,6,7),v(8LL,9)),
 		   v(0,4,8)/cut/til(10));
       ASSERT_MATCH(v(v(0LL,1,2,3),til/0,v(4LL,5,6,7),v(8LL,9)),
-		   v(0,4,4,8)/cut/til(10));
+		   v(0,4,4,8)/cut/=til/10);
     },
   };
   
@@ -124,9 +125,9 @@ namespace {
     "dicts are functions", []{
       ASSERT_MATCH(3LL, d(v("abcde"),til/5)('d'));
       ASSERT_MATCH(v(1LL,3), d(v("abcde"),til/5)(v("bd")));
-      ASSERT_MATCH(1LL, d(v("abcde"),til/each/til(5))('d',1));
-      ASSERT_MATCH(v(0LL,2), d(v("abcde"),til/each/til(5))('d',v(0,2)));
-      auto e = d(v("abcde"),til/5/rot/left/til(5));
+      ASSERT_MATCH(1LL, d(v("abcde"),til/each/=til/5)('d',1));
+      ASSERT_MATCH(v(0LL,2), d(v("abcde"),til/each/=til/5)('d',v(0,2)));
+      auto e = d(v("abcde"),til/5/rot/left/=til/5);
       ASSERT_MATCH(v(v(1LL,3),v(3LL,0)), e(v("bd"),v(0,2)));
     },
   };
@@ -188,11 +189,11 @@ namespace {
   
   hunit::testcase in_tests[] = {
     "atom/in/vec returns true iff atom is in vec", []{
-      ASSERT(3/in/til(5));
-      ASSERT(!(8/in/til(5)));
+      ASSERT(3/in/=til/5);
+      ASSERT(!(8/in/=til/5));
     },
     "lhs/in/vec follows the shape of lhs", []{
-      ASSERT_MATCH(v(10_b,01_b), v(v(3,8),v(5,2))/in/til(5));
+      ASSERT_MATCH(v(10_b,01_b), v(v(3,8),v(5,2))/in/=til/5);
     },
   };
   
@@ -233,7 +234,7 @@ namespace {
       ASSERT(!(1.0/0/match/(-1.0/0)));
       ASSERT(std::numeric_limits<double>::quiet_NaN()/match/
 	     std::numeric_limits<double>::quiet_NaN());
-      ASSERT((1.0!=sum(7/take/(1.0/7))) && 1.0/match/sum(7/take/(1.0/7)));
+      ASSERT((1.0/ne/=sum/=7/take/=1.0/7) && (1.0/match/=sum/=7/take/=1.0/7));
     },
   };
   
@@ -288,7 +289,7 @@ namespace {
   
   hunit::testcase rev_tests[] = {
     "rev/vec reverses vec", []{
-      ASSERT_MATCH(v("abc"), rev(v("cba")));},
+      ASSERT_MATCH(v("abc"), rev/v("cba"));},
   };
   
   hunit::testcase rot_tests[] = {
@@ -341,16 +342,16 @@ namespace {
       ASSERT_MATCH(v(20,30,10,20,30), -5/take/v(10,20,30));},
     "pair/take/vec reshapes", []{
       ASSERT_MATCH(v(v(0LL,1),v(2LL,3)), v(2,2)/take/til(10));
-      ASSERT_MATCH(v(v(0LL,1,2,3,4,5),v(6LL,7,8,9,0,1)), v(2,6)/take/til(10));
+      ASSERT_MATCH(v(v(0LL,1,2,3,4,5),v(6LL,7,8,9,0,1)), v(2,6)/take/=til/10);
     },
     "v(r,0)/take/vec takes as many cols as needed to make r rows", []{
       ASSERT_MATCH(v(v(0LL,1,2,3),v(4LL,5,6,7)), v(2,0)/take/til(8));
       ASSERT_MATCH(v(v(0LL,1,2),v(3LL,4,5),v(6LL,7)), v(3,0)/take/til(8));
       ASSERT_MATCH(v(v(0LL,1),v(2LL,3),v(4LL,5),v(6LL),v(7LL),v(8LL),v(9LL)),
-		   v(7,0)/take/til(10));
+		   v(7,0)/take/=til/10);
     },
     "v(0,c)/take/vec takes as many rows as needed to make c cols", []{
-      ASSERT_MATCH(v(v(0LL,1,2,3,4,5,6),v(7LL,8,9)), v(0,7)/take/til(10));},
+      ASSERT_MATCH(v(v(0LL,1,2,3,4,5,6),v(7LL,8,9)), v(0,7)/take/=til/10);},
   };
   
   hunit::testcase vec_tests[] = {
@@ -372,6 +373,7 @@ namespace {
       ASSERT_MATCH(v(0,3), v(v(0,1,2),v(3,4,5))(v(0,1),0));
       ASSERT_MATCH(v(v(0,2),v(3,5)), v(v(0,1,2),v(3,4,5))(v(0,1),v(0,2)));
       ASSERT_MATCH(v("gc"), v(2,0)/(v(3,3)/take/v("abcdefghi")/both)/v(0,2));
+      ASSERT_MATCH(v("gc"), v(2,0)/=v(3,3)/take/v("abcdefghi")/both/=v(0,2));
     },
   };
 
@@ -386,12 +388,12 @@ namespace {
       ASSERT_MATCH(v(0LL,2,4), where/(0==til/5%2));
     },
     "where/vec<integral> is x#'!#x", []{
-      ASSERT_MATCH(v(1LL,2,2,3,3,3,4,4,4,4), where/til(5));},
+      ASSERT_MATCH(v(1LL,2,2,3,3,3,4,4,4,4), where/=til/5);},
   };
   
   hunit::testcase xbar_tests[] = {
     "atom/xbar/vec rounds vec's elements down to multiples of atom", []{
-      ASSERT_MATCH(v(0LL,0,0,3,3,3,6,6,6,9), 3/xbar/til(10));},
+      ASSERT_MATCH(v(0LL,0,0,3,3,3,6,6,6,9), 3/xbar/=til/10);},
   };
 
   int run_tests() {
@@ -436,12 +438,12 @@ namespace {
   }
 } // namespace
 
-int main (int argc, const char* argv[]) {  
+int main (int argc, const char* argv[]) {
   // TODO automate these and write a bunch more
   /*
   //    V1(cout<<x<<' ')/each/til(3); cout << '\n';
   cout << deltas/v(8,3,5) << '\n';
-  cout << 0/std::plus<int>()/over/00_b << '\n';
+  cout << 0/plus/over/00_b << '\n';
   cout << 0/L2(x+y)/over/11_b << '\n';
   cout << avg/v(8,3,5) << '\n';
   cout << differ/v(3,3,3) << '\n';
@@ -475,7 +477,7 @@ int main (int argc, const char* argv[]) {
 
   cout << cos(til/10) << '\n';
   */
-  
+
   // run_tests();
   // cout << group/d(s/each/v("abcdefghijklmnopqrst"),
   // 		  v(4,0,2,1,2,1,2,3,2,4,1,0,2,4,1,2,0,1,1,2));
@@ -486,8 +488,11 @@ int main (int argc, const char* argv[]) {
   //   d(v("d"_s,"b"_s,"c"_s),v(10,20,30));
   //  return EXIT_SUCCESS;
 
-  cout << 1_b << 0_b << '\n';
-  auto f = many(L3(x+y+z));
-  cout << f(v(1,2,3),v(10,20,30),v(100,200,300)) << '\n';
+  // cout << 1_b << 0_b << '\n';
+  // auto f = many(L3(x+y+z));
+  // cout << f(v(1,2,3),v(10,20,30),v(100,200,300)) << '\n';
+  //auto q = 1/=plus/=til/=10;
+  cout << (1/=plus/=til/=10) << '\n';
+  cout << (til/3/L2(x*y)/right/=til/3) << '\n';
   return run_tests();
 }
