@@ -43,7 +43,7 @@ With C++ precedence and associativity rules, you can force right-to-left evaluat
 auto x = sum/=7/take/=1.0/7; // x is not quite 1.0
 ```
 
-Keep in mind that compound assignment has lower precedence than all other operators except the comma operator.  You will sometimes need () around the whole expression using /= operator:
+Keep in mind that compound assignment has lower precedence than all other operators except the comma operator.  So, when using /= you will sometimes need () around the subexpression:
 
 ```
 cout << (sum/=7/take/=1.0/7) << '\n';
