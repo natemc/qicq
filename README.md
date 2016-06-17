@@ -86,6 +86,13 @@ cout << L2(x+y)/scan/til(5) << '\n';                     // 0 1 3 6 10
 cout << 4/L2(x-y)/prior/v(8,3,5) << '\n';                // 4 -5 2
 ```
 
+For looping over more than two vectors in parallel, qicq has ```many```:
+
+```
+auto f = many(L3(x+y+z));
+cout << f(v(1,2,3),v(10,20,30),v(100,200,300)) << '\n'; // 111 222 333
+```
+
 The plan for extended overloads is to name them differently.  So far, qicq only supports converge:
 
 ```
