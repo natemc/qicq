@@ -33,7 +33,21 @@ Adding support for monadic (unary) function objects in general requires c++17's 
 cout << til/5 << '\n'; // 0 1 2 3 4
 ```
 
-Beware, however: C++ precedence rules still apply, and you will often have to use () even for qicq's monadic functions.
+Beware, however: C++ precedence rules still apply, and you will often have to use ().
+
+## Right-to-left expression evaluation
+
+With C++ precedence and associativity rules, you can force right-to-left evaluation with compound assignment; qicq supports this with the /= operator:
+
+```
+auto x = sum/=7/take/=1.0/7; // x is not quite 1.0
+```
+
+Keep in mind that compound assignment has lower precedence than all other operators except the comma operator.  You will sometimes need () around the whole expression using /= operator:
+
+```
+cout << (sum/=7/take/=1.0/7) << '\n';
+```
 
 ## Atomic operations
 
