@@ -167,13 +167,13 @@ cout << p/dot/t(s("pi"),3.14) << '\n'; // pi:3.14
 
 ## Literals
 
-You can create a symbol via either the s function or the _s literal:
+You can create a symbol via either the ```s``` function or the ```_s``` literal:
 
 ```
 assert(s("xyzzy") == "xyzzy"_s);
 ```
 
-You can create a vec<bool> using _b:
+You can create a ```vec<bool>``` using ```_b```:
 
 ```
 assert(v(true,false,true) == 101_b);
