@@ -157,12 +157,12 @@ cout << group/d(s/each/v("abcdefghijklmnopqrst"),
 // 3| ,h
 ```
 
-Tuples are mostly experimental at this point and have limited support.  However, while you can't apply a function to a vec (yet), you can apply a function to a tuple:
+Tuples are mostly experimental at this point and have limited support.  However, you can use dot to apply a function to a tuple:
 
 ```
 auto p = [](const sym& s, double x){
   std::ostringstream os; os << s << ':' << x; return os.str();};
-cout << p/apply/t(s("pi"),3.14) << '\n'; // pi:3.14
+cout << p/dot/t(s("pi"),3.14) << '\n'; // pi:3.14
 ```
 
 ## Literals
