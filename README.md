@@ -74,6 +74,8 @@ cout << v(v(0,1,2),v(3,4,5))(1,1) << '\n';            // 4
 cout << v(v(0,1,2),v(3,4,5))(v(0,1),v(0,2)) << '\n';  // (0 2) (3 5)
 ```
 
+At the moment, you can only index one or two levels deep.
+
 You cannot use ```/``` for indexing in this way, because ```/``` in this context means atomic division.  However, you can apply an adverb to a container using ```/``` e.g.
 
 ```
@@ -81,10 +83,16 @@ auto x = v(3,3)/take/v("abcdefghi");          // abc def ghi
 assert(v(2,0)/(x/both)/v(0,2)/match/v("gc"));
 ```
 
-qicq's containers can also be indexed using the at function:
+qicq's containers can also be indexed using the ```at``` function:
 
 ```
 cout << v("abcdefghij")/at/v((1,3,5),v(2,4,6)) << '\n'; // bdf ceg
+```
+
+qicq's dot function needs a tuple on the rhs when used to index a container, because the return type is different depending on the size of the rhs.
+
+```
+cout << v(v("ace"),v("bdf"))/dot/t(v(0,1),v(2,1)) << '\n'; // ec fd
 ```
 
 ## Adverbs
