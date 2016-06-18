@@ -27,23 +27,23 @@ using std::cout;
 cout << 2/L2(x+y)/3 << '\n'; // 5
 ```
 
-Adding support for monadic (unary) function objects in general requires c++17's is_callable trait, but the qicq function objects all support similar syntax:
+Adding support for monadic (unary) function objects in general requires c++17's ```is_callable``` trait, but the qicq function objects all support similar syntax:
 
 ```
 cout << til/5 << '\n'; // 0 1 2 3 4
 ```
 
-Beware, however: C++ precedence rules still apply, and you will often have to use ().
+Beware, however: C++ precedence rules still apply, and you will sometimes find it easier to use ().
 
 ## Right-to-left expression evaluation
 
-With C++ precedence and associativity rules, you can force right-to-left evaluation with compound assignment; qicq supports this with the /= operator:
+With C++ precedence and associativity rules, you can force right-to-left evaluation with compound assignment; qicq supports this with the ```/=``` operator:
 
 ```
 auto x = sum/=7/take/=1.0/7; // x is not quite 1.0
 ```
 
-Keep in mind that compound assignment has lower precedence than all other operators except the comma operator.  So, when using /= you will sometimes need () around the subexpression:
+Keep in mind that the only opereator with lower precedence than the assignment operators is the comma operator.  So, when using ```/=``` you will sometimes need () around the subexpression:
 
 ```
 cout << (sum/=7/take/=1.0/7) << '\n';
@@ -59,13 +59,13 @@ qicq's containers respond to arithmetic and relational operators by automaticall
 using std::cout; // advise against "using namespace std" due to a few name conflicts
 using namespace qicq;
 
-cout << 1+til/5 << '\n';            // 1 2 3 4 5
-cout << where/(0==til/5%2) << '\n'; // 0 2 4
+cout << 1+til/5 << '\n';          // 1 2 3 4 5
+cout << where(0==til/5%2) << '\n'; // 0 2 4
 ```
 
-## Indexing
+## Uniform Application & Indexing
 
-Containers are functions, so you can index a vec or dict using operator():
+Containers are functions, so you index a vec or dict using operator():
 
 ```
 cout << v("abcdefghij")(4) << '\n';                   // e
@@ -74,17 +74,25 @@ cout << v(v(0,1,2),v(3,4,5))(1,1) << '\n';            // 4
 cout << v(v(0,1,2),v(3,4,5))(v(0,1),v(0,2)) << '\n';  // (0 2) (3 5)
 ```
 
-You cannot use / for indexing in this way, because / in this context means atomic division.  However, you can apply an adverb to a container using / e.g.
+At the moment, you can only index one or two levels deep.
+
+You cannot use ```/``` for indexing in this way, because ```/``` in this context means atomic division.  However, you can apply an adverb to a container using ```/``` e.g.
 
 ```
 auto x = v(3,3)/take/v("abcdefghi");          // abc def ghi
 assert(v(2,0)/(x/both)/v(0,2)/match/v("gc"));
 ```
 
-qicq's containers can also be indexed using the at function:
+qicq's containers can also be indexed using the ```at``` function:
 
 ```
 cout << v("abcdefghij")/at/v((1,3,5),v(2,4,6)) << '\n'; // bdf ceg
+```
+
+qicq's dot function needs a tuple on the rhs when used to index a container, because the return type is different depending on the size of the rhs.
+
+```
+cout << v(v("ace"),v("bdf"))/dot/t(v(0,1),v(2,1)) << '\n'; // ec fd
 ```
 
 ## Adverbs
