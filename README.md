@@ -27,7 +27,15 @@ using std::cout;
 cout << 2/L2(x+y)/3 << '\n'; // 5
 ```
 
-Adding support for monadic (unary) function objects in general requires c++17's ```is_callable``` trait, but the qicq function objects all support similar syntax:
+Function pointers are a builtin type, and it is impossible to redefine the behavior of C++ operators for builtin types.  So, if you want to use a regular function infix, wrap it in a call to ```f```, which will make a function object out of it:
+
+```
+int add(int x, int y) { return x+y; }
+..
+cout << 3/f(add)/4 << '\n';           // 7
+```
+
+The monadic (unary) qicq function objects all support similar syntax:
 
 ```
 cout << til/5 << '\n'; // 0 1 2 3 4
@@ -113,6 +121,12 @@ For looping over more than two vectors in parallel, qicq has ```many```:
 ```
 auto f = many(L3(x+y+z));
 cout << f(v(1,2,3),v(10,20,30),v(100,200,300)) << '\n'; // 111 222 333
+```
+
+Functions are generally all different types, so you have to put them in a tuple (not a vec) if you intend to loop over them:
+
+```
+cout << (t(min,max)/at/left/right/=v(3,3)/take/=til/9) << '\n'; // (0 2) (3 5) (6 8)
 ```
 
 The plan for extended overloads is to name them differently.  So far, qicq only supports converge:
