@@ -13,7 +13,6 @@ namespace qicq {
 
   detail::All all;
   detail::Amend amend;
-  detail::Apply apply;
   detail::Any any;
   detail::Asc asc;
   detail::At at;
@@ -24,7 +23,7 @@ namespace qicq {
   detail::Desc desc;
   detail::Differ differ;
   detail::Distinct distinct;
-  //detail::Dot dot; TODO
+  detail::Dot dot;
   detail::Drop drop;
   detail::Enlist enlist;
   detail::Except except;

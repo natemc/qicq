@@ -234,7 +234,8 @@ namespace {
       ASSERT(!(1.0/0/match/(-1.0/0)));
       ASSERT(std::numeric_limits<double>::quiet_NaN()/match/
 	     std::numeric_limits<double>::quiet_NaN());
-      ASSERT((1.0/ne/=sum/=7/take/=1.0/7) && (1.0/match/=sum/=7/take/=1.0/7));
+      ASSERT((1.0/L2(x!=y)/=sum/=7/take/=1.0/7) &&
+	     (1.0/match/=sum/=7/take/=1.0/7));
     },
   };
   
@@ -436,6 +437,26 @@ namespace {
     };
     return hunit::run(suites);
   }
+
+  struct S {
+    double operator()(char, int&);
+    float operator()(int) { return 1.0; }
+  };
+
+  template <class T>
+  std::result_of_t<T(int)> g(T& t) {
+    std::cout << "overload of g for callable T\n";
+    return t(0);
+  }
+
+  template <class T, class U>
+  int g(U u) {
+    std::cout << "overload of g for non-callable T\n";
+    return u;
+  }
+
+  int add(int x, int y) { return x+y; }
+
 } // namespace
 
 int main (int argc, const char* argv[]) {
@@ -463,8 +484,6 @@ int main (int argc, const char* argv[]) {
   cout << asc/d(v("a"_s,"b"_s,"c"_s),v(3,2,1));
   cout << d(v("a"_s,"b"_s,"c"_s),v(3,2,1))/join/d(v("b"_s,"d"_s),v(10,20));
   cout << "++++++++++++++++++++++++++++++++++++++++\n";
-  V1(cout<<x<<'*')/each/t(v(1,2,3),string("abc")); cout << '\n';
-  cout << L1(x.size())/each/t(v(1,2,3),string("abc")) << '\n';
   cout << 25/L2(x+y)/over/t(v(1,2,3),v(40,50,60)) << '\n';
   cout << L2(x+y)/scan/t(v(1,2,3),v(40,50,60)) << '\n';
   cout << 25/L2(x+y)/scan/t(v(1,2,3),v(40,50,60)) << '\n';
@@ -494,5 +513,21 @@ int main (int argc, const char* argv[]) {
   //auto q = 1/=plus/=til/=10;
   cout << (1/=plus/=til/=10) << '\n';
   cout << (til/3/L2(x*y)/right/=til/3) << '\n';
+  cout << where(0==til/5%2) << '\n';
+  auto x = v(3,3)/take/v("abcdefghi");
+  cout << (v(2,0)/=x/both/v(0,2)) << '\n';
+  assert(v("gc")/match/=v(2,0)/=x/both/v(0,2));
+
+  // Can't redefine operator/ for builtin types, even those for which
+  // operator/ is not defined, so we need to use f() to fun-ify add.
+  cout << 3/f(add)/4 << '\n';
+  cout << L1(x*x)/at/v(1,2,3) << '\n';
+  cout << L2(x*y)/dot/v(4,5) << '\n';
+  V1(cout<<x<<'*')/each/t(v(1,2,3),string("abc")); cout << '\n';
+  cout << L1(x.size())/each/t(v(1,2,3),string("abc")) << '\n';
+  cout << L1(x)/each/t(v(1,2,3),string("abc")) << '\n';
+
+  assert(detail::is_callable_v<detail::Plus(int,float)>);
+
   return run_tests();
 }

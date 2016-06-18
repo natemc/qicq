@@ -19,6 +19,8 @@
 #include <type_traits>
 #include <utility>
 
+#include <qicq/qicq_fun.h>
+
 namespace qicq {
   template <class... T>
   using tuple = boost::hana::tuple<T...>;
@@ -62,11 +64,11 @@ namespace qicq {
     const_reference front() const { return v.front(); }
     reference       back ()       { return v.back(); }
     const_reference back () const { return v.back(); }
-    reference       operator[](size_type i)       { return v[i]; }
-    const_reference operator[](size_type i) const { return v[i]; }
+    //    reference       operator[](size_type i)       { return v[i]; }
+    //    const_reference operator[](size_type i) const { return v[i]; }
     
-    reference       operator()(size_type i)       { return (*this)[i]; }
-    const_reference operator()(size_type i) const { return (*this)[i]; }
+    reference       operator()(size_type i)       { return v[i]; }
+    const_reference operator()(size_type i) const { return v[i]; }
     // TODO non-const vec indexing operator so we can say
     // x(v(1,3,5,7)) = "qicq"; // modify x in place
     template <class I>
@@ -132,11 +134,9 @@ namespace qicq {
     const_reference front() const { return *begin(); }
     reference       back ()       { return *(begin()+size()-1); }
     const_reference back () const { return *(begin()+size()-1); }
-    reference       operator[](size_type i)       { return *(begin()+i); }
-    const_reference operator[](size_type i) const { return *(begin()+i); }
 
-    reference       operator()(size_type i)       { return (*this)[i]; }
-    const_reference operator()(size_type i) const { return (*this)[i]; }
+    reference       operator()(size_type i)       { return *(begin()+i); }
+    const_reference operator()(size_type i) const { return *(begin()+i); }
     template <class I>
     auto operator()(const vec<I>& i) const {
       vec<bool> r(i.size());
@@ -189,7 +189,7 @@ namespace qicq {
     
     const vec<K>& key() const { return k; }
     const vec<V>& val() const { return v; }
-    reference operator[](const K& k_) {
+    reference operator()(const K& k_) {
       auto i = std::find(std::begin(k), std::end(k), k_);
       if (std::end(k) != i)
         return *(std::begin(v) + (i-std::begin(k)));
@@ -197,13 +197,10 @@ namespace qicq {
       v.push_back(V());
       return v.back();
     }
-    const_reference operator[](const K& k_) const {
+    const_reference operator()(const K& k_) const {
       // TODO: handle not found?
-      return v[std::find(std::begin(k), std::end(k), k_) - std::begin(k)];
+      return v(std::find(std::begin(k), std::end(k), k_) - std::begin(k));
     }
-
-    reference       operator()(const K& k_)       { return (*this)[k_]; }
-    const_reference operator()(const K& k_) const { return (*this)[k_]; }
     template <class I>
     auto operator()(const vec<I>& i) const {
       vec<V> r(i.size());
@@ -334,7 +331,7 @@ namespace qicq {
       const size_t kw = max_width(k);
       os << std::left;
       for (size_t i=0; i<d.size(); ++i)
-        os << std::setw(kw) << k[i] << "| " << d.val()[i] << '\n';
+        os << std::setw(kw) << k(i) << "| " << d.val()(i) << '\n';
       return os;
     }
   }
@@ -381,6 +378,15 @@ namespace qicq {
     template <class T>
     constexpr bool has_converge_type_v = has_converge_type<T>::value;
     
+    // http://talesofcpp.fusionfenix.com/post-11/true-story-call-me-maybe
+    template <class, class = void> struct is_callable_imp: std::false_type {};
+    template <class F, class... A>
+    struct is_callable_imp<F(A...), detail::to_void_t<result_of_t<F(A...)>>>:
+      std::true_type {};
+    template <class E> struct is_callable: is_callable_imp<E> {};
+    template <class E>
+    constexpr bool is_callable_v = is_callable<E>::value;
+  
     // I think this is impossible.  We want to say, is F callable with
     // one argument of type A, but NOT callable with two arguments
     // where the first argument is type A, and the 2nd argument is of
@@ -442,6 +448,24 @@ namespace qicq {
       return hana::all_of(t, [&](auto&& x){
           return hana::type_c<decltype(f(x))> == t0;});
     }
+
+    template <class F>
+    struct Fun {
+      F f;
+      Fun(const F& f_): f(f_) {}
+      template <class X>
+      auto operator()(X&& x) const { return f(std::forward<X>(x)); }
+      template <class X, class Y>
+      auto operator()(X&& x, Y&& y) const {
+        return f(std::forward<X>(x), std::forward<Y>(y));
+      }
+      template <class X, class Y, class Z>
+      auto operator()(X&& x, Y&& y, Z&& z) const {
+        return f(std::forward<X>(x), std::forward<Y>(y), std::forward<Z>(z));
+      }
+    };
+    template <class F>
+    Fun<F> make_fun(F&& f) { return Fun<F>(std::forward<F>(f)); }
     
     template <class F, class L>
     struct FunLhs {
@@ -482,7 +506,7 @@ namespace qicq {
       void operator()(const vec<T>& x) const {
         std::for_each(std::begin(x), std::end(x), f);
       }
-
+////////////////////////////////////////////////////////////////////////////////
       template <class... T>
       auto operator()(const tuple<T...>& t) const {
         using namespace hana;
@@ -494,7 +518,7 @@ namespace qicq {
                                 [&](auto&& x){ // uniform type so convert to vec
                                   vec<decltype(f(u[0_c]))> r(size(x));
                                   int i=0;
-                                  for_each(x, [&](auto&& e){r[i++]=(f(e));});
+                                  for_each(x, [&](auto&& e){r(i++)=f(e);});
                                   return r;
                                 })(u);})(t);
       }
@@ -658,13 +682,13 @@ namespace qicq {
       auto operator()(const vec<T>& x, const vec<U>&... y) const {
         vec<int64_t> i(x.size());
         std::iota(std::begin(i), std::end(i), 0);
-	return Each()([&](int64_t j){return f(x[j], y[j]...);})(i);
+        return Each()([&](int64_t j){return f(x[j], y[j]...);})(i);
       }
     };
     struct EachMany: Adverb {
       template <class F>
       auto operator()(F&& f) const {
-	return BoundEachMany<F>(std::forward<F>(f));
+        return BoundEachMany<F>(std::forward<F>(f));
       }
     };
     
@@ -682,9 +706,9 @@ namespace qicq {
       auto operator()(const vec<R>& rhs) const {
         vec<decltype(f(*std::begin(rhs),*std::begin(rhs)))> r(rhs.size());
         if (rhs.size()) {
-          r[0] = rhs[0];
+          r(0) = rhs(0);
           for (size_t i=1; i<rhs.size(); ++i)
-            r[i] = f(rhs[i], rhs[i-1]);
+            r(i) = f(rhs(i), rhs(i-1));
         }
         return r;
       }      
@@ -695,10 +719,10 @@ namespace qicq {
       template <class... T>
       auto operator()(const tuple<T...>& t) const {
         vec<decltype(f(t[0_c],t[0_c]))> r(hana::size(t));
-        r[0] = t[0_c];
+        r(0) = t[0_c];
         if (1 < r.size()) {
           int i=1;
-          hana::fold(t, [&](auto&& g,auto&& h){r[i++]=f(h,g);return h;});
+          hana::fold(t, [&](auto&& g,auto&& h){r(i++)=f(h,g);return h;});
         }
         return r;
       }
@@ -707,9 +731,9 @@ namespace qicq {
       auto operator()(const L& lhs, const vec<R>& rhs) const {
         vec<decltype(f(lhs,*std::begin(rhs)))> r(rhs.size());
         if (rhs.size()) {
-          r[0] = f(rhs[0], lhs);
+          r(0) = f(rhs(0), lhs);
           for (size_t i=1; i<rhs.size(); ++i)
-            r[i] = f(rhs[i], rhs[i-1]);
+            r(i) = f(rhs(i), rhs(i-1));
         }
         return r;
       }
@@ -721,7 +745,7 @@ namespace qicq {
         auto operator()(const L& lhs, const tuple<T...>& rhs) const {
         vec<decltype(f(rhs[0_c],lhs))> r(hana::size(rhs));
         int i=0;
-        hana::fold(rhs, lhs, [&](auto&& g,auto&& h){r[i++]=f(h,g);return h;});
+        hana::fold(rhs, lhs, [&](auto&& g,auto&& h){r(i++)=f(h,g);return h;});
         return r;
       }
             
@@ -748,8 +772,8 @@ namespace qicq {
       template <class T, result_of_t<F(T,T)>* = nullptr>
       auto operator()(const vec<T>& rhs) const {
         assert(rhs.size());
-        return 1 == rhs.size()? static_cast<result_of_t<F(T,T)>>(rhs[0]) :
-          std::accumulate(rhs.begin()+2, rhs.end(), f(rhs[0],rhs[1]), f);
+        return 1 == rhs.size()? static_cast<result_of_t<F(T,T)>>(rhs(0)) :
+          std::accumulate(rhs.begin()+2, rhs.end(), f(rhs(0),rhs(1)), f);
       }
       template <class K, class V>
       auto operator()(const dict<K,V>& rhs) const {
@@ -761,7 +785,7 @@ namespace qicq {
       template <class L, class R>
       auto operator()(const L& lhs, const vec<R>& rhs) const {
         return rhs.empty()? static_cast<result_of_t<F(L,R)>>(lhs) :
-          std::accumulate(rhs.begin()+1, rhs.end(), f(lhs,rhs[0]), f);
+          std::accumulate(rhs.begin()+1, rhs.end(), f(lhs,rhs(0)), f);
       }
       template <class L, class K, class V>
       auto operator()(const L& lhs, const dict<K,V>& rhs) const {
@@ -800,9 +824,9 @@ namespace qicq {
       template <class... T>
       auto operator()(const tuple<T...>& t) const {
         vec<decltype(f(t[0_c],t[0_c]))> r(hana::size(t));
-        r[0] = t[0_c];
+        r(0) = t[0_c];
         int i = 1;
-        hana::fold(t, [&](auto&& x, auto&& y){return r[i++]=f(x,y);});
+        hana::fold(t, [&](auto&& x, auto&& y){return r(i++)=f(x,y);});
         return r;
       }
       
@@ -812,9 +836,9 @@ namespace qicq {
       auto operator()(const L& lhs, const vec<R>& rhs) const {
         vec<decltype(f(lhs,*std::begin(rhs)))> r(rhs.size());
         if (rhs.size()) {
-          r[0] = f(lhs, rhs[0]);
+          r(0) = f(lhs, rhs(0));
           for (size_t i=1; i<rhs.size(); ++i)
-            r[i] = f(r[i-1], rhs[i]);
+            r(i) = f(r(i-1), rhs(i));
         }
         return r;
       }
@@ -826,7 +850,7 @@ namespace qicq {
       auto operator()(const L& lhs, const tuple<T...>& rhs) const {
         vec<decltype(f(lhs,rhs[0_c]))> r(hana::size(rhs));
         int i = 0;
-        hana::fold(rhs, lhs, [&](auto&& x, auto&& y){return r[i++]=f(x,y);});
+        hana::fold(rhs, lhs, [&](auto&& x, auto&& y){return r(i++)=f(x,y);});
         return r;
       }      
       
@@ -851,16 +875,16 @@ namespace qicq {
 #elif defined QIC_DICT_MERGE_REL_OP
 #error "QIC_DICT_MERGE_REL_OP macro conflict"
 #else
-#define QICQ_ATOMIC_OP(op)						\
+#define QICQ_ATOMIC_OP(op)                                              \
   template <class T, class U,                                           \
     std::enable_if_t<std::is_arithmetic<U>::value>* = nullptr>          \
   auto operator op(const vec<T>& x, const U& y) {                       \
-    return detail::Each()([&](const T& t){return t op y;})(x);		\
+    return detail::Each()([&](const T& t){return t op y;})(x);          \
   }                                                                     \
   template <class T, class U,                                           \
     std::enable_if_t<std::is_arithmetic<T>::value>* = nullptr>          \
   auto operator op(const T& x, const vec<U>& y) {                       \
-    return detail::Each()([&](const U& u){return x op u;})(y);		\
+    return detail::Each()([&](const U& u){return x op u;})(y);          \
   }                                                                     \
   template <class T, class U>                                           \
   auto operator op(const vec<T>& x, const vec<U>& y) {                  \
@@ -873,12 +897,12 @@ namespace qicq {
   template <class K, class V, class U,                                  \
     std::enable_if_t<std::is_arithmetic<U>::value>* = nullptr>          \
   auto operator op(const dict<K,V>& x, const U& y) {                    \
-    return detail::Each()([&](const V& v){return v op y;})(x);		\
+    return detail::Each()([&](const V& v){return v op y;})(x);          \
   }                                                                     \
   template <class T, class K, class V,                                  \
     std::enable_if_t<std::is_arithmetic<T>::value>* = nullptr>          \
   auto operator op(const T& x, const dict<K,V>& y) {                    \
-    return detail::Each()([&](const V& v){return x op v;})(y);		\
+    return detail::Each()([&](const V& v){return x op v;})(y);          \
   }                                                                     \
   template <class K, class V, class U>                                  \
   auto operator op(const dict<K,V>& x, const vec<U>& y) {               \
@@ -892,40 +916,40 @@ namespace qicq {
   }
   //    return detail::EachBoth()(f)(x,y); // why doesn't this work?
 
-#define QICQ_DICT_MERGE_OP(op, id)					\
-  QICQ_ATOMIC_OP(op)							\
+#define QICQ_DICT_MERGE_OP(op, id)                                      \
+  QICQ_ATOMIC_OP(op)                                                    \
   template <class K, class V, class U>                                  \
   auto operator op(const dict<K,V>& x, const dict<K,U>& y) {            \
     typedef decltype(std::declval<V>() op std::declval<U>()) R;         \
     dict<K,R> r;                                                        \
     for (const K& k: x.key()) {                                         \
       if (y.has(k))                                                     \
-        r[k] = x[k] op y[k];                                            \
+        r(k) = x(k) op y(k);                                            \
       else                                                              \
-        r[k] = x[k] op U(id);                                           \
+        r(k) = x(k) op U(id);                                           \
     }                                                                   \
     for (const K& k: y.key()) {                                         \
       if (!r.has(k))                                                    \
-        r[k] = V(id) op y[k];                                           \
+        r(k) = V(id) op y(k);                                           \
     }                                                                   \
     return r;                                                           \
   }
   
-#define QICQ_DICT_MERGE_REL_OP(op,no_lhs,no_rhs)			\
-  QICQ_ATOMIC_OP(op)							\
+#define QICQ_DICT_MERGE_REL_OP(op,no_lhs,no_rhs)                        \
+  QICQ_ATOMIC_OP(op)                                                    \
   template <class K, class V, class U>                                  \
   auto operator op(const dict<K,V>& x, const dict<K,U>& y) {            \
     typedef decltype(std::declval<V>() op std::declval<U>()) R;         \
     dict<K,R> r;                                                        \
     for (auto k: x.key()) {                                             \
       if (y.has(k))                                                     \
-        r[k] = x[k] op y[k];                                            \
+        r(k) = x(k) op y(k);                                            \
       else                                                              \
-        r[k] = no_rhs;                                                  \
+        r(k) = no_rhs;                                                  \
     }                                                                   \
     for (auto k: y.key()) {                                             \
       if (!r.has(k))                                                    \
-        r[k] = no_lhs;                                                  \
+        r(k) = no_lhs;                                                  \
     }                                                                   \
     return r;                                                           \
   }
@@ -992,32 +1016,10 @@ namespace qicq {
       }
     };
 
-    struct Apply: NonChainArg {
-      // TODO use hana::if to avoid trying to compile invocations of f
-      // that won't possibly work and then test x.size() at runtime.
-      // We need is_callable to do it, though, and nobody seems to
-      // have made it work for template operator()s...
-      //      template <class F, class T>
-        //      auto operator()(const F& f, const vec<T>& x) const {
-        /* hana::if_(); */
-        /* return f(x...); */
-      //      }
-      
-      template <class F, class T, class U>
-      auto operator()(const F& f, const std::pair<T,U>& x) const {
-        return f(x.first, x.second);
-      }
-      template <class F, class... T>
-      auto operator()(F&& f, const tuple<T...>& x) const {
-        return hana::unpack(x, std::forward<F>(f));
-      }
-    };
-    
     struct At {
-      template <class T, class U>
-      auto operator()(const vec<T>& x, const U& i) const { return x[i]; }
-      template <class K, class V, class U>
-      auto operator()(const dict<K,V>& x, const U& i) const { return x[i]; }
+      template <class F, class I>
+      auto operator()(const F& f, const I& i) const { return f(i); }
+
       // TODO add slice and figure out how it works
       template <class... T, class U>
       auto operator()(const tuple<T...>& x, const U& i) const {
@@ -1068,7 +1070,7 @@ namespace qicq {
       auto operator()(const tuple<T...>& x) const {
         vec<bool> r(hana::size(x));
         int i=0;
-        hana::for_each(x, [&](auto&& e){r[i++]=e;});
+        hana::for_each(x, [&](auto&& e){r(i++)=e;});
         return r;
       }
       template <class T>
@@ -1106,7 +1108,7 @@ namespace qicq {
         auto ri = std::begin(r);
         for (auto pi = ++std::begin(p); pi!=std::end(p); ++pi, ++ri)
           for (ri->reserve(*pi-xi); xi != *pi; ++xi)
-            ri->push_back(x[xi]);
+            ri->push_back(x(xi));
         std::copy(std::begin(x)+xi, std::end(x), std::back_inserter(*ri));
         return r;
       }
@@ -1143,6 +1145,63 @@ namespace qicq {
       auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
+    struct Dot: NonChainArg {
+      template <class F, class T,
+        enable_if_t<is_callable_v<F(T)> && !is_callable_v<F(T,T)> &&
+          !is_callable_v<F(T,T,T)>>* = nullptr>
+      auto operator()(const F& f, const vec<T>& x) const {
+        return f(x(0));
+      }
+      template <class F, class T,
+        enable_if_t<!is_callable_v<F(T)> && is_callable_v<F(T,T)> &&
+          !is_callable_v<F(T,T,T)>>* = nullptr>
+      auto operator()(const F& f, const vec<T>& x) const {
+        return f(x(0),x(1));
+      }
+      template <class F, class T,
+        enable_if_t<is_callable_v<F(T)> && is_callable_v<F(T,T)> &&
+          !is_callable_v<F(T,T,T)>>* = nullptr>
+      auto operator()(const F& f, const vec<T>& x) const {
+        return 2==x.size()? f(x(0),x(1)) : f(x(0));
+      }
+      template <class F, class T,
+        enable_if_t<!is_callable_v<F(T)> && !is_callable_v<F(T,T)> &&
+        is_callable_v<F(T,T,T)>>* = nullptr>
+      auto operator()(const F& f, const vec<T>& x) const {
+        return f(x(0),x(1),x(2));
+      }
+      template <class F, class T,
+        enable_if_t<is_callable_v<F(T)> && !is_callable_v<F(T,T)> &&
+        is_callable_v<F(T,T,T)>>* = nullptr>
+      auto operator()(const F& f, const vec<T>& x) const {
+        return 3==x.size()? f(x(0),x(1),x(2)) : f(x(0));
+      }
+      template <class F, class T,
+        enable_if_t<!is_callable_v<F(T)> && is_callable_v<F(T,T)> &&
+        is_callable_v<F(T,T,T)>>* = nullptr>
+      auto operator()(const F& f, const vec<T>& x) const {
+        return 3==x.size()? f(x(0),x(1),x(2)) : f(x(0),x(1));
+      }
+      template <class F, class T,
+        enable_if_t<is_callable_v<F(T)> && is_callable_v<F(T,T)> &&
+        is_callable_v<F(T,T,T)>>* = nullptr>
+      auto operator()(const F& f, const vec<T>& x) const {
+        return
+          3==x.size()? f(x(0),x(1),x(2)) :
+          2==x.size()? f(x(0),x(1))      :
+          f(x(0));
+      }
+
+      template <class F, class T, class U>
+      auto operator()(const F& f, const std::pair<T,U>& x) const {
+        return f(x.first, x.second);
+      }
+      template <class F, class... T>
+      auto operator()(F&& f, const tuple<T...>& x) const {
+        return hana::unpack(x, std::forward<F>(f));
+      }
+    };
+    
     struct Drop {
       template <class T>
       vec<T> operator()(int64_t n, const vec<T>& v) const {
@@ -1185,7 +1244,7 @@ namespace qicq {
       K operator()(const dict<K,V>& x, const U& y) const {
         const int64_t i = (*this)(x.val(), y);
         // TODO we need a better answer than K() for not found in dict
-        return i<x.size()? x.key()[i] : K();
+        return i<x.size()? x.key()(i) : K();
       }
       template <class K, class V, class U>
       auto operator()(const dict<K,V>& x, const vec<U>& y) const {
@@ -1223,7 +1282,7 @@ namespace qicq {
         vec<vec<int64_t>> v(k.size());
         Find f;
         for (size_t i=0; i<x.size(); ++i)
-          v[f(k,x[i])].push_back(i);
+          v(f(k,x(i))).push_back(i);
         return make_dict(k, v);
       }
       template <class K, class V>
@@ -1242,7 +1301,7 @@ namespace qicq {
       vec<int64_t> operator()(const vec<T>& x) const {
         Compare c;
         return Til()(x.size()).sort([&](int64_t i,int64_t j){
-            return c(x[i],x[j]);});
+            return c(x(i),x(j));});
       }
       template <class K, class V>
       auto operator()(const dict<K,V>& x) const {
@@ -1276,7 +1335,7 @@ namespace qicq {
       vec<int64_t> operator()(const vec<T>& x) const {
         Compare c;
         return Til()(x.size()).sort([&](int64_t i,int64_t j){
-            return c(x[j],x[i]);});
+            return c(x(j),x(i));});
       }
       template <class K, class V>
       auto operator()(const dict<K,V>& x) const {
@@ -1361,7 +1420,7 @@ namespace qicq {
       template <class K, class V, class U>
       auto operator()(const dict<K,V>& x, const dict<K,U>& y) const {
         dict<K,V> r(x);
-        Each()([&](int64_t i){r[y.key()[i]]=y.val()[i];})(Til()(y.size()));
+        Each()([&](int64_t i){r(y.key()(i))=y.val()(i);})(Til()(y.size()));
         return r;
       }
     };
@@ -1443,7 +1502,7 @@ namespace qicq {
         Compare c;
         std::sort(std::begin(x), std::end(x), c);
         const size_t p = x.size()/2;
-        return 1 == x.size()%2? x[p] : (x[p-1]+x[p]) / 2.0;
+        return 1 == x.size()%2? x(p) : (x(p-1)+x(p)) / 2.0;
       }
       template <class K, class V>
       double operator()(const dict<K,V>& x) const { return (*this)(x.val()); }
@@ -1540,31 +1599,9 @@ namespace qicq {
       auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
-    // Eventually we're gonna have to do this for all 6 relops
-    // since we can't redefine the builtin relops on builtin types.
-    /* struct Eq { */
-    /* }; */
-    
-    struct Match {
-      // fuzzy match float and double
-      // 0n~0n inf~inf -inf~-inf
-      // 0 must ~ 0 exactly
-      // else tolerance match
-      bool operator()(float x, float y) const {
-        return (*this)(double(x),double(y));
-      }
-      bool operator()(double x, double y) const {
-        if (std::isnan(x)) return std::isnan(y);
-        if (std::isnan(y)) return std::isnan(x);
-        if ((x<0) != (y<0)) return false;
-        if (!std::isfinite(x)) return !std::isfinite(y);
-        if (!std::isfinite(y)) return !std::isfinite(x);
-        const double t = std::exp2(-43);
-        return std::abs(x-y) <= t*std::max(std::abs(x),std::abs(y));
-      }
-      
+    struct Match {      
       template <class T, enable_if_t<is_arithmetic_v<T>>* = nullptr>
-      bool operator()(const T& x, const T& y) const { return x==y; }
+      bool operator()(const T& x, const T& y) const { return Eq()(x,y); }
       template <class T>
       bool operator()(const vec<T>& x, const vec<T>& y) const {
         return x.size() == y.size() && All()(EachBoth()(*this)(x,y));
@@ -1604,8 +1641,7 @@ namespace qicq {
         enable_if_t<!is_same_v<U,result_of_t<F(U)>>>* = nullptr>
       boost::any keep_going(const T& orig, const U& x) const {
         auto r = f(x);
-        if (Match()(r,x) || Match()(r,orig)) return r;
-        return keep_going(orig, r);
+        return Match()(r,x) || Match()(r,orig)? r :keep_going(orig, r);
       }
     };
     template <class F>
@@ -1641,8 +1677,7 @@ namespace qicq {
         enable_if_t<!is_same_v<U,result_of_t<F(U)>>>* = nullptr>
       boost::any keep_going(const T& orig, const U& x) const {
         auto r = f(x);
-        if (Match()(r,x) || Match()(r,orig)) return r;
-        return keep_going(orig, r);
+        return Match()(r,x) || Match()(r,orig)? r :keep_going(orig, r);
       }
     };
     struct Converge: Adverb {
@@ -1663,7 +1698,7 @@ namespace qicq {
       template <class T>
       auto operator()(const vec<T>& x) const {
         auto r = !EachPrior()(Match())(x);
-        r[0] = true;
+        r(0) = true;
         return r;
       }
       template <class K, class V>
@@ -1771,7 +1806,7 @@ namespace qicq {
         return
           n <  0       ? from_back(-n, x)                       :
           n <= x.size()? vec<T>(std::begin(x), std::begin(x)+n) :
-          Each()([&](int64_t j){return x[j%x.size()];})(Til()(n));
+          Each()([&](int64_t j){return x(j%x.size());})(Til()(n));
       }
       template <class K, class V>
       dict<K,V> operator()(int64_t n, const dict<K,V>& x) const {
@@ -1826,7 +1861,7 @@ namespace qicq {
       template <class T>
       vec<T> from_back(int64_t n, const vec<T>& v) const {
         return n <= v.size()? vec<T>(std::end(v)-n, std::end(v)) :
-          EachRight()([&](int64_t o,int64_t j){return v[(o+j)%v.size()];})
+          EachRight()([&](int64_t o,int64_t j){return v((o+j)%v.size());})
             (v.size() - n%v.size(), Til()(n));
       }
     
@@ -1834,7 +1869,7 @@ namespace qicq {
       vec<vec<U>>
       matrix_from_vector(int64_t m, int64_t n, const vec<U>& x) const {
         return EachLeft()(EachRight()([&](int64_t r,int64_t c){
-              return x[(c+r*n)%x.size()];}))(Til()(m),Til()(n));
+              return x((c+r*n)%x.size());}))(Til()(m),Til()(n));
       }
     };
   
@@ -1892,8 +1927,8 @@ namespace qicq {
         vec<int64_t> r(n);
         int64_t ri = 0;
         for (int64_t i=0; i<x.size(); ++i)
-          for (int64_t j=0; j<x[i]; ++j)
-            r[ri++] = i;
+          for (int64_t j=0; j<x(i); ++j)
+            r(ri++) = i;
         return r;
       }
 
@@ -1983,8 +2018,8 @@ namespace qicq {
   /* } */
 
   template <class F>
-  auto operator/(F&& f, const detail::Apply& a) {
-    return detail::make_funlhs(a, std::forward<F>(f));
+  auto operator/(F&& f, const detail::Dot& d) {
+    return detail::make_funlhs(d, std::forward<F>(f));
   }
   
   template <class F>
@@ -2023,6 +2058,11 @@ namespace qicq {
     return detail::make_funlhs(e(fl.f), fl.lhs);
   }
 
+  // TODO extend this logic to all dyadic Bound adverbs
+  template <class F, class R>
+  auto operator/(const detail::BoundEachBoth<F>& e, R&& x) {
+    return detail::make_funrhs(e, std::forward<R>(x));
+  }
   template <class F>
   auto operator/(F&& f, const detail::EachBoth& e) {
     return e(std::forward<F>(f));
@@ -2096,6 +2136,10 @@ namespace qicq {
   auto operator/=(const detail::BoundEach<F>& e, R&& x) {
     return e(std::forward<R>(x));
   }
+  /* template <class F, class R> */
+  /* auto operator/=(const detail::BoundEachBoth<F>& e, R&& x) { */
+  /*   return detail::make_funrhs(e, std::forward<R>(x)); */
+  /* } */
   template <class F, class R>
   auto operator/=(const detail::BoundEachRight<F>& e, R&& x) {
     return e(std::forward<R>(x));
@@ -2132,6 +2176,9 @@ namespace qicq {
   template <class... T>
   auto t(T&&... a) { return boost::hana::make_tuple(std::forward<T>(a)...); }
 
+  template <class F>
+  auto f(F&& f) { return detail::make_fun(f); }
+  
   //////////////////////////////////////////////////////////////////////////////
   // Adverbs 
   //////////////////////////////////////////////////////////////////////////////
@@ -2151,7 +2198,6 @@ namespace qicq {
   extern detail::All all;
   extern detail::Amend amend;
   extern detail::Any any;
-  extern detail::Apply apply; // TODO can we unify w/At?
   extern detail::Asc asc;
   extern detail::At at;
   extern detail::Avg avg;
@@ -2161,7 +2207,7 @@ namespace qicq {
   extern detail::Desc desc;
   extern detail::Differ differ;
   extern detail::Distinct distinct;
-  //extern detail::Dot dot; TODO
+  extern detail::Dot dot;
   extern detail::Drop drop;
   extern detail::Enlist enlist;
   extern detail::Except except;
