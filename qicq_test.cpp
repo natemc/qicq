@@ -57,11 +57,12 @@ namespace {
     "f/scan/atom returns atom", []{
       ASSERT_MATCH(42, plus/scan/42);},
     "f/scan/vec returns the prefix (f) over vec", []{
-      // TODO investigate why the result is not v(0LL,...)
       ASSERT_MATCH(v(0LL,1,3,6,10), plus/scan/=til/5);},
     "atom/f/scan/vec returns the prefix (f) over vec w/initial value atom", []{
-      // TODO investigate why the result is not v(2LL,...)
       ASSERT_MATCH(v(2LL,3,5,8,12), 2/plus/scan/=til/5);},
+    "at/left works with functions on the lhs", []{
+      ASSERT_MATCH(v(v(0LL,2),v(3LL,5),v(6LL,8)),
+                   t(min,max)/at/left/right/=v(0,3,6)/cut/=til/9);},
   };
 
   hunit::testcase all_tests[] = {
