@@ -8,7 +8,7 @@ qicq_lambda.h has a few macros for creating lambdas in a qish way:
 ```
 #include <iostream>
 #include <qicq_lambda.h>
-using std::cout;
+using std::cout; // advise against "using namespace std" due to a few name conflicts
 
 auto f = L2(x+y);       // L2 creates a 2-arg lambda with args x and y
 cout << f(2,3) << '\n'; // 5
@@ -64,10 +64,10 @@ qicq's containers respond to arithmetic and relational operators by automaticall
 ```
 #include <iostream>
 #include <qicq.h>
-using std::cout; // advise against "using namespace std" due to a few name conflicts
+using std::cout;
 using namespace qicq;
 
-cout << 1+til/5 << '\n';          // 1 2 3 4 5
+cout << 1+til/5 << '\n';           // 1 2 3 4 5
 cout << where(0==til/5%2) << '\n'; // 0 2 4
 ```
 
