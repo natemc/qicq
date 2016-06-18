@@ -24,6 +24,8 @@
 namespace qicq {
   template <class... T>
   using tuple = boost::hana::tuple<T...>;
+
+  template <class K, class V> struct dict;
   
   template <class T>
   struct vec {
@@ -72,11 +74,9 @@ namespace qicq {
     // TODO non-const vec indexing operator so we can say
     // x(v(1,3,5,7)) = "qicq"; // modify x in place
     template <class I>
-    auto operator()(const vec<I>& i) const {
-      vec<T> r(i.size());
-      std::transform(std::begin(i), std::end(i), std::begin(r), *this);
-      return r;      
-    }
+    auto operator()(const vec<I>& i) const;
+    template <class K, class V>
+    auto operator()(const dict<K,V>& i) const;
     template <class I, class J,
       std::enable_if_t<std::is_integral<I>::value>* = nullptr>
     auto operator()(const I& i, const J& j) const {
@@ -141,7 +141,7 @@ namespace qicq {
     auto operator()(const vec<I>& i) const {
       vec<bool> r(i.size());
       std::transform(std::begin(i), std::end(i), std::begin(r), *this);
-      return r;      
+      return r;
     }
     
     template <class C>
@@ -202,11 +202,9 @@ namespace qicq {
       return v(std::find(std::begin(k), std::end(k), k_) - std::begin(k));
     }
     template <class I>
-    auto operator()(const vec<I>& i) const {
-      vec<V> r(i.size());
-      std::transform(std::begin(i), std::end(i), std::begin(r), *this);
-      return r;      
-    }
+    auto operator()(const vec<I>& i) const;
+    template <class L, class U>
+    auto operator()(const dict<L,U>& i) const;
     template <class I, class J,
       std::enable_if_t<std::is_convertible<I,K>::value>* = nullptr>
     auto operator()(const I& i, const J& j) const {
@@ -1041,8 +1039,29 @@ namespace qicq {
       auto operator()(const dict<K,V>& x, const dict<L,U>& i) const {
         return make_dict(i.key(), (*this)(x, i.val()));
       }
-    };
 
+      // TODO tuple index
+    };
+  } // namespace detail
+  
+  template <class T> template <class I>
+  auto vec<T>::operator()(const vec<I>& i) const {
+    return detail::At()(*this, i);
+  }
+  template <class T> template <class K, class V>
+  auto vec<T>::operator()(const dict<K,V>& i) const {
+    return detail::At()(*this, i);
+  }
+  template <class K, class V> template <class I>
+  auto dict<K,V>::operator()(const vec<I>& i) const {
+    return detail::At()(*this, i);
+  }
+  template <class K, class V> template <class L, class U>
+  auto dict<K,V>::operator()(const dict<L,U>& i) const {
+    return detail::At()(*this, i);
+  }
+  
+  namespace detail {
     struct Avg {
       typedef double converge_type;
       

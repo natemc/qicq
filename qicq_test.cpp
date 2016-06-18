@@ -88,7 +88,7 @@ namespace {
       ASSERT_MATCH(v("zy"), v("xyzzy")/at/v(2,4));},
     "at's result conforms to the index", []{
       ASSERT_MATCH(v(v("acegi"),v("bdfhj")),
-		   v("abcdefghij")/at/v(2*til(5),1+2*til(5)));},
+        	   v("abcdefghij")/at/v(2*til(5),1+2*til(5)));},
   };
   
   hunit::testcase cut_tests[] = {
@@ -375,6 +375,8 @@ namespace {
       ASSERT_MATCH(v(v(0,2),v(3,5)), v(v(0,1,2),v(3,4,5))(v(0,1),v(0,2)));
       ASSERT_MATCH(v("gc"), v(2,0)/(v(3,3)/take/v("abcdefghi")/both)/v(0,2));
       ASSERT_MATCH(v("gc"), v(2,0)/=v(3,3)/take/v("abcdefghi")/both/=v(0,2));
+      ASSERT_MATCH(v(v("acegi"),v("bdfhj")),
+        	   v("abcdefghij")(v(2*til(5),1+2*til(5))));
     },
   };
 
@@ -526,6 +528,8 @@ int main (int argc, const char* argv[]) {
   V1(cout<<x<<'*')/each/t(v(1,2,3),string("abc")); cout << '\n';
   cout << L1(x.size())/each/t(v(1,2,3),string("abc")) << '\n';
   cout << L1(x)/each/t(v(1,2,3),string("abc")) << '\n';
+
+  cout << v(v("ace"),v("bdf"))/dot/t(v(0,1),v(1,2)) << '\n';
 
   assert(detail::is_callable_v<detail::Plus(int,float)>);
 
