@@ -59,7 +59,7 @@ cout << (sum/=7/take/=1.0/7) << '\n';
 
 ## Atomic operations
 
-qicq's containers respond to arithmetic and relational operators by automatically vectorizing:
+qicq's vecs and dicts respond to arithmetic and relational operators by automatically vectorizing:
 
 ```
 #include <iostream>
@@ -73,13 +73,15 @@ cout << where(0==til/5%2) << '\n'; // 0 2 4
 
 ## Uniform Application & Indexing
 
-Containers are functions, so you index a vec or dict using operator():
+Containers are functions, so you index them using operator():
 
 ```
 cout << v("abcdefghij")(4) << '\n';                   // e
 cout << v("abcdefghij")(v((1,3,5),v(2,4,6))) << '\n'; // bdf ceg
 cout << v(v(0,1,2),v(3,4,5))(1,1) << '\n';            // 4
 cout << v(v(0,1,2),v(3,4,5))(v(0,1),v(0,2)) << '\n';  // (0 2) (3 5)
+cout << d(v("abcde"),til/5)('d') << '\n';             // 3
+cout << t(v(1,2,3),string("abc"))(0_c) << '\n';       // 1 2 3
 ```
 
 At the moment, you can only index one or two levels deep.
