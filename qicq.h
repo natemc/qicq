@@ -1842,6 +1842,22 @@ namespace qicq {
       auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
+    template <class F>
+    struct BoundCross {
+      F f;
+      BoundCross(const F& f_): f(f_) {}
+      template <class T>
+      auto operator()(const T& t) const {
+        return Raze()(EachLeft()(EachRight()(f))(t,t));
+      }
+      template <class T>
+      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
+    };
+    struct Cross: Adverb {
+      template <class F>
+      auto operator()(F&& f) const { return BoundCross<F>(std::forward<F>(f)); }
+    };
+    
     struct Reverse {
       template <class T>
       vec<T> operator()(const vec<T>& x) const {
@@ -2137,6 +2153,11 @@ namespace qicq {
   }
 
   template <class F>
+  auto operator/(F&& f, const detail::Cross& c) {
+    return c(std::forward<F>(f));
+  }
+
+  template <class F>
   auto operator/(F&& f, const detail::Each& e) {
     return e(std::forward<F>(f));
   }
@@ -2297,6 +2318,7 @@ namespace qicq {
   // Adverbs 
   //////////////////////////////////////////////////////////////////////////////
   extern detail::Converge  conv;
+  extern detail::Cross     cross;
   extern detail::Each      each;
   extern detail::EachLeft  left;
   extern detail::EachRight right;

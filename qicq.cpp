@@ -4,6 +4,7 @@ namespace qicq {
   detail::Hole hole;
   
   detail::Converge  conv;
+  detail::Cross     cross;
   detail::Each      each;
   detail::EachLeft  left;
   detail::EachRight right;

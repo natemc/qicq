@@ -15,7 +15,7 @@ install: libqicq.dylib qicq.h qicq_fun.h qicq_lambda.h qicq_math.h qicq_sym.h
 	mkdir -p /usr/local/include/qicq
 	cp $(filter %.h,$^) /usr/local/include/qicq
 
-libqicq.dylib: qicq.o qicq_sym.o
+libqicq.dylib: qicq.o qicq_fun.o qicq_sym.o
 	clang++ -shared $^ -o $@
 
 qicq.o: qicq.cpp qicq.h

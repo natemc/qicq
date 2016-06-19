@@ -66,6 +66,12 @@ namespace {
                    t(min,max)/at/left/right/=v(0,3,6)/cut/=til/9);},
     "both works on tuples", []{
       ASSERT_MATCH(t(5,7,9), t(1,2,3)/plus/both/t(4,5,6));},
+    "cross applies its arg to x X x", []{
+      ASSERT_MATCH(v(v(0,1,0),v(0,1,1),v(0,1,2),
+                     v(1,1,0),v(1,1,1),v(1,1,2),
+                     v(2,1,0),v(2,1,1),v(2,1,2)),
+                   L2(v(x,1,y))/cross/v(0,1,2));
+    },
   };
 
   hunit::testcase all_tests[] = {
