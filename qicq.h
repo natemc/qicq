@@ -763,7 +763,7 @@ namespace qicq {
       auto operator()(const vec<T>& x, const vec<U>&... y) const {
         vec<int64_t> i(x.size());
         std::iota(std::begin(i), std::end(i), 0);
-        return Each()([&](int64_t j){return f(x[j], y[j]...);})(i);
+        return Each()([&](int64_t j){return f(x(j), y(j)...);})(i);
       }
     };
     struct EachMany: Adverb {
