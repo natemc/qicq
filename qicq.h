@@ -700,7 +700,7 @@ namespace qicq {
       template<class L,class R,enable_if_t<is_void_result_v<F(L,R)>>* =nullptr>
       void operator()(const vec<L>& lhs, const vec<R>& rhs) const {
         assert(lhs.size() == rhs.size());
-        for (size_t i=0; i<lhs.size(); ++i) f(lhs[i], rhs[i]);
+        for (size_t i=0; i<lhs.size(); ++i) f(lhs(i), rhs(i));
       }
       template <class K, class V, class R>
       auto operator()(const dict<K,V>& lhs, const vec<R>& rhs) const {
@@ -1832,7 +1832,7 @@ namespace qicq {
     };
 
     struct Raze {
-      template <class T, enable_if_t<is_vec_v<T>>* = nullptr>
+      template <class T>
       auto operator()(const vec<T>& x) const {
         return Over()(Join())(x);
       }

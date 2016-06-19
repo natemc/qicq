@@ -298,6 +298,7 @@ namespace {
   
   hunit::testcase raze_tests[] = {
     "raze/vec<vec> flattens one level", []{
+      ASSERT_MATCH(v(1,2,3), raze/v(1,2,3));
       ASSERT_MATCH(v(1,2,3,4,5,6), raze/v(v(1,2,3),v(4,5,6)));
       ASSERT_MATCH(v(v(1,2),v(3,4),v(5,6),v(7,8)),
 		   raze/v(v(v(1,2),v(3,4)),v(v(5,6),v(7,8))));
