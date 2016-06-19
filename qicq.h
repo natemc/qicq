@@ -22,20 +22,52 @@
 #include <qicq/qicq_fun.h>
 
 namespace qicq {
+  namespace detail {
+    struct Hole {};
+  } // namespace detail
+  
   template <class...  T>
   struct tuple: boost::hana::tuple<T...> {
     using boost::hana::tuple<T...>::tuple;
     template <class N> auto operator[](N&& n)       = delete;
     template <class N> auto operator[](N&& n) const = delete;
-    template <class N>
+    template <class N,
+      std::enable_if_t<boost::hana::IntegralConstant<N>::value>* = nullptr>
     auto operator()(N&& n) {
       return boost::hana::at(*this,std::forward<N>(n));
     }
-    template <class N>
+    template <class N,
+      std::enable_if_t<boost::hana::IntegralConstant<N>::value>* = nullptr>
     auto operator()(N&& n) const {
       return boost::hana::at(*this,std::forward<N>(n));
     }
+    template <class N, class J,
+      std::enable_if_t<boost::hana::IntegralConstant<N>::value>* = nullptr>
+    auto operator()(N&& n, J&& j) const {
+      return (*this)(std::forward<N>(n))(std::forward<J>(j));
+    }
+    template <class... U>
+    auto operator()(const tuple<U...>& u) const;
+    template <class J>
+    auto operator()(const detail::Hole&, const J& j) const;
   };
+  
+  template <class... T>
+  auto make_tuple(boost::hana::tuple<T...>&& x) {
+    return tuple<T...>(std::move(x));
+  }
+  template <class... T>
+  template <class... U>
+  auto tuple<T...>::operator()(const tuple<U...>& u) const {
+    return make_tuple
+      (boost::hana::transform(u, [&](const auto& i){return (*this)(i);}));
+  }
+  template <class... T>
+  template <class J>
+  auto tuple<T...>::operator()(const detail::Hole&, const J& j) const {
+    return make_tuple
+      (boost::hana::transform(*this, [&](const auto& i){return i(j);}));
+  }
   
   template <class K, class V> struct dict;
   
@@ -83,7 +115,9 @@ namespace qicq {
     
     reference       operator()(size_type i)       { return v[i]; }
     const_reference operator()(size_type i) const { return v[i]; }
-    // TODO non-const vec indexing operator so we can say
+    vec&       operator()(const detail::Hole&)       { return *this; }
+    const vec& operator()(const detail::Hole&) const { return *this; }
+    // TODO non-const vec indexing operator? so we can say
     // x(v(1,3,5,7)) = "qicq"; // modify x in place
     template <class I>
     auto operator()(const vec<I>& i) const;
@@ -100,6 +134,13 @@ namespace qicq {
       auto t((*this)(i));
       vec<std::decay_t<decltype((*std::begin(t))(j))>> r(t.size());
       std::transform(std::begin(t), std::end(t), std::begin(r),
+                     [&](auto&& u){return u(j);});
+      return r;
+    }
+    template <class J>
+    auto operator()(const detail::Hole&, const J& j) const {
+      vec<std::decay_t<decltype(front()(j))>> r(size());
+      std::transform(begin(), end(), std::begin(r),
                      [&](auto&& u){return u(j);});
       return r;
     }
@@ -149,6 +190,8 @@ namespace qicq {
 
     reference       operator()(size_type i)       { return *(begin()+i); }
     const_reference operator()(size_type i) const { return *(begin()+i); }
+    vec&       operator()(const detail::Hole&)       { return *this; }
+    const vec& operator()(const detail::Hole&) const { return *this; }
     template <class I>
     auto operator()(const vec<I>& i) const {
       vec<bool> r(i.size());
@@ -213,6 +256,8 @@ namespace qicq {
       // TODO: handle not found?
       return v(std::find(std::begin(k), std::end(k), k_) - std::begin(k));
     }
+    dict&       operator()(const detail::Hole&)       { return *this; }
+    const dict& operator()(const detail::Hole&) const { return *this; }
     template <class I>
     auto operator()(const vec<I>& i) const;
     template <class L, class U>
@@ -230,6 +275,14 @@ namespace qicq {
       std::transform(std::begin(t), std::end(t), std::begin(r),
                      [&](auto&& u){return u(j);});
       return r;
+    }
+    template <class J>
+    auto operator()(const detail::Hole&, const J& j) const {
+      typedef std::decay_t<decltype(front()(j))> U;
+      vec<U> r(size());
+      std::transform(begin(), end(), std::begin(r),
+                     [&](auto&& u){return u(j);});
+      return dict<K,U>(key(), r);
     }
 
   private:
@@ -255,6 +308,13 @@ namespace qicq {
   //////////////////////////////////////////////////////////////////////////////
   // Stream output
   //////////////////////////////////////////////////////////////////////////////
+  template <class... T>
+  std::ostream& operator<<(std::ostream& os, const boost::hana::tuple<T...>& t)
+  {
+    boost::hana::for_each(t, [&](auto&& x){os << x << '\n';});
+    return os;
+  }
+  
   template <class... T>
   std::ostream& operator<<(std::ostream& os, const tuple<T...>& t) {
     boost::hana::for_each(t, [&](auto&& x){os << x << '\n';});
@@ -421,11 +481,6 @@ namespace qicq {
       return dict<K,V>(k,v);
     }
 
-    template <class... T>
-    auto tuple_cast(const boost::hana::tuple<T...>& x) {
-      return *reinterpret_cast<const tuple<T...>*>(&x);
-    }
-    
     ////////////////////////////////////////////////////////////////////////////
     // NonChainArg: things that aren't treated as arguments to
     // functions in / chaining
@@ -521,7 +576,7 @@ namespace qicq {
                    [&](auto&& u){
                      return if_(!uniform_result_type(f,u),
                                 [&](auto&& x){
-                                  return tuple_cast(transform(x, f));
+                                  return make_tuple(transform(x, f));
                                 },
                                 [&](auto&& x){ // uniform type so convert to vec
                                   vec<decltype(f(u(0_c)))> r(size(x));
@@ -672,6 +727,24 @@ namespace qicq {
           if (rhs.has(k))
             r[k] = f(lhs[k],rhs[k]);
         return r;
+      }
+
+      // Expressing the enable_if might be possible with hana ...
+      /* template <class... L, class... R, */
+      /*   enable_if_t<is_void_result_v<F(L...,R...)>>* =nullptr> */
+      /* auto operator()(const tuple<L...>& x, const tuple<R...>& y) const { */
+      /*   // What's wrong with this assert? */
+      /*   //        static_assert(hana::size(x) == hana::size(y)); */
+      /*   hana::for_each(hana::zip(x,y), [&](auto&& h){return f(h[0_c],h[1_c]);}); */
+      /* } */
+      template <class... L, class... R>
+      //        enable_if_t<!is_void_result_v<F(L...,R...)>>* =nullptr>
+      auto operator()(const tuple<L...>& x, const tuple<R...>& y) const {
+        // What's wrong with this assert?
+        //        static_assert(hana::size(x) == hana::size(y));
+        return make_tuple
+          (hana::transform(hana::zip(x,y),
+                           [&](auto&& h){return f(h[0_c],h[1_c]);}));
       }
     };
     struct EachBoth: Adverb {
@@ -1639,7 +1712,14 @@ namespace qicq {
       bool operator()(const dict<K,V>& x, const dict<K,V>& y) const {
         return (*this)(x.key(), y.key()) && (*this)(x.val(), y.val());
       }
-      template <class T, class U>
+      template <class... T>
+      bool operator()(const tuple<T...>& x, const tuple<T...>& y) const {
+        return hana::fold(hana::zip(x,y), true,
+                          [&](auto&& g,auto&& h){
+                            return g && (*this)(h[0_c],h[1_c]);
+                          });
+      }
+      template <class T, class U, enable_if_t<!is_same_v<T,U>>* = nullptr>
       bool operator()(const T& x, const U& y) const { return false; }
     };
 
@@ -2209,6 +2289,11 @@ namespace qicq {
   auto f(F&& f) { return detail::make_fun(f); }
   
   //////////////////////////////////////////////////////////////////////////////
+  // Tags
+  //////////////////////////////////////////////////////////////////////////////
+  extern detail::Hole hole;
+  
+  //////////////////////////////////////////////////////////////////////////////
   // Adverbs 
   //////////////////////////////////////////////////////////////////////////////
   extern detail::Converge  conv;
@@ -2224,53 +2309,53 @@ namespace qicq {
   //////////////////////////////////////////////////////////////////////////////
   // Functions
   //////////////////////////////////////////////////////////////////////////////
-  extern detail::All all;
-  extern detail::Amend amend;
-  extern detail::Any any;
-  extern detail::Asc asc;
-  extern detail::At at;
-  extern detail::Avg avg;
-  extern detail::Bool cbool;
-  extern detail::Cut cut;
-  extern detail::Deltas deltas;
-  extern detail::Desc desc;
-  extern detail::Differ differ;
+  extern detail::All      all;
+  extern detail::Amend    amend;
+  extern detail::Any      any;
+  extern detail::Asc      asc;
+  extern detail::At       at;
+  extern detail::Avg      avg;
+  extern detail::Bool     bool_;
+  extern detail::Cut      cut;
+  extern detail::Deltas   deltas;
+  extern detail::Desc     desc;
+  extern detail::Differ   differ;
   extern detail::Distinct distinct;
-  extern detail::Dot dot;
-  extern detail::Drop drop;
-  extern detail::Enlist enlist;
-  extern detail::Except except;
-  extern detail::Find find;
-  extern detail::First first;
-  extern detail::Group group;
-  extern detail::Iasc iasc;
-  extern detail::Idesc idesc;
-  extern detail::In in;
-  extern detail::Inter inter;
-  extern detail::Join join;
-  extern detail::Key key;
-  extern detail::Last last;
-  extern detail::Match match;
-  extern detail::Max max;
-  extern detail::Med med;
-  extern detail::Min min;
+  extern detail::Dot      dot;
+  extern detail::Drop     drop;
+  extern detail::Enlist   enlist;
+  extern detail::Except   except;
+  extern detail::Find     find;
+  extern detail::First    first;
+  extern detail::Group    group;
+  extern detail::Iasc     iasc;
+  extern detail::Idesc    idesc;
+  extern detail::In       in;
+  extern detail::Inter    inter;
+  extern detail::Join     join;
+  extern detail::Key      key;
+  extern detail::Last     last;
+  extern detail::Match    match;
+  extern detail::Max      max;
+  extern detail::Med      med;
+  extern detail::Min      min;
   //extern detail::Next next_; TODO: implies nulls
   //extern detail::Prev prev_; TODO: implies nulls
-  extern detail::Rank rank;
-  extern detail::Raze raze;
-  extern detail::Reverse rev;
-  extern detail::Rotate rot;
-  extern detail::Signum signum;
-  extern detail::Sublist sublist;
-  extern detail::Sum sum;
+  extern detail::Rank     rank;
+  extern detail::Raze     raze;
+  extern detail::Reverse  rev;
+  extern detail::Rotate   rot;
+  extern detail::Signum   signum;
+  extern detail::Sublist  sublist;
+  extern detail::Sum      sum;
   //extern detail::Sv sv TODO
-  extern detail::Take take;
-  extern detail::Til til;
-  extern detail::Union union_;
-  extern detail::Value val;
+  extern detail::Take     take;
+  extern detail::Til      til;
+  extern detail::Union    union_;
+  extern detail::Value    val;
   //extern detail::Vs vs; TODO
-  extern detail::Where where;
-  extern detail::Xbar xbar;
+  extern detail::Where    where;
+  extern detail::Xbar     xbar;
 } // namespace qicq
 
 #endif

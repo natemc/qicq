@@ -11,6 +11,7 @@
 #include <qicq/qicq_sym.h>
 
 namespace hana = boost::hana;
+using namespace hana::literals;
 using namespace qicq;
 using std::cout;
 using std::ostringstream;
@@ -63,6 +64,8 @@ namespace {
     "at/left works with functions on the lhs", []{
       ASSERT_MATCH(v(v(0LL,2),v(3LL,5),v(6LL,8)),
                    t(min,max)/at/left/right/=v(0,3,6)/cut/=til/9);},
+    "both works on tuples", []{
+      ASSERT_MATCH(t(5,7,9), t(1,2,3)/plus/both/t(4,5,6));},
   };
 
   hunit::testcase all_tests[] = {
@@ -130,6 +133,15 @@ namespace {
       ASSERT_MATCH(v(0LL,2), d(v("abcde"),til/each/=til/5)('d',v(0,2)));
       auto e = d(v("abcde"),til/5/rot/left/=til/5);
       ASSERT_MATCH(v(v(1LL,3),v(3LL,0)), e(v("bd"),v(0,2)));
+    },
+    "indexing a dict with a hole returns the dict", []{
+      ASSERT_MATCH(d(v("abc"),til/3), d(v("abc"),til/3)(hole));
+    },
+    "indexing a dict with a hole in the 1st index returns columns", []{
+      ASSERT_MATCH(d(v("abc"),v(1LL,4,7)),
+                   d(v("abc"),v(3,3)/take/til(9))(hole,1));
+      ASSERT_MATCH(d(v("abc"), v(v(0LL,2),v(3LL,5),v(6LL,8))),
+                   d(v("abc"),v(3,3)/take/til(9))(hole,v(0,2)));
     },
   };
   
@@ -237,6 +249,9 @@ namespace {
 	     std::numeric_limits<double>::quiet_NaN());
       ASSERT((1.0/L2(x!=y)/=sum/=7/take/=1.0/7) &&
 	     (1.0/match/=sum/=7/take/=1.0/7));
+    },
+    "match works on tuples", []{
+      ASSERT(t(1,v("abc"))/match/t(1,v("abc")));
     },
   };
   
@@ -355,6 +370,16 @@ namespace {
     "v(0,c)/take/vec takes as many rows as needed to make c cols", []{
       ASSERT_MATCH(v(v(0LL,1,2,3,4,5,6),v(7LL,8,9)), v(0,7)/take/=til/10);},
   };
+
+  hunit::testcase tuple_tests[] = {
+    "indexing a tuple with another tuple", []{
+      ASSERT_MATCH(t(v("abc"),til/3),
+                   t(v("abc"),v(1,2,3),til/3)(t(0_c,2_c)));},
+    "indexing a tuple containing vecs", []{
+      ASSERT_MATCH(3, t(v("abc"),v(1,2,3))(1_c,2));},
+    "indexing a tuple containing vecs with a hole in the 1st index", []{
+      ASSERT_MATCH(t('c',3), t(v("abc"),v(1,2,3))(hole,2));},
+  };
   
   hunit::testcase vec_tests[] = {
     "v(int,double) yields vec<double>", []{
@@ -378,6 +403,14 @@ namespace {
       ASSERT_MATCH(v("gc"), v(2,0)/=v(3,3)/take/v("abcdefghi")/both/=v(0,2));
       ASSERT_MATCH(v(v("acegi"),v("bdfhj")),
         	   v("abcdefghij")(v(2*til(5),1+2*til(5))));
+    },
+    "indexing a vec with a hole returns the vec", []{
+      ASSERT_MATCH(til/3, til(3)(hole));
+    },
+    "indexing a 2-d vec with a hole in the 1st index returns columns", []{
+      ASSERT_MATCH(v(1LL,4,7), (v(3,3)/take/til(9))(hole,1));
+      ASSERT_MATCH(v(v(0LL,2),v(3LL,5),v(6LL,8)),
+                   (v(3,3)/take/til(9))(hole,v(0,2)));
     },
   };
 
@@ -433,6 +466,7 @@ namespace {
       sublist_tests,
       sum_tests,
       take_tests,
+      tuple_tests,
       union_tests,
       vec_tests,
       where_tests,
@@ -536,6 +570,7 @@ int main (int argc, const char* argv[]) {
   V1(cout<<x<<'*')/each/t(v(1,2,3),string("abc")); cout << '\n';
   cout << L1(x.size())/each/t(v(1,2,3),string("abc")) << '\n';
   cout << L1(x)/each/t(v(1,2,3),string("abc")) << '\n';
+  cout << t(v(1,2,3),string("abc"))(0_c) << '\n';
 
   cout << v(v("ace"),v("bdf"))/dot/t(v(0,1),v(1,2)) << '\n';
 
