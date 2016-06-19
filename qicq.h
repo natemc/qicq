@@ -2263,6 +2263,10 @@ namespace qicq {
   auto operator/=(const L& l_, const detail::FunRhs<F,R>& x) { return x(l_); }
   
   template <class F, class R>
+  auto operator/=(const detail::BoundCross<F>& e, R&& x) {
+    return e(std::forward<R>(x));
+  }
+  template <class F, class R>
   auto operator/=(const detail::BoundEach<F>& e, R&& x) {
     return e(std::forward<R>(x));
   }
