@@ -22,9 +22,21 @@
 #include <qicq/qicq_fun.h>
 
 namespace qicq {
-  template <class... T>
-  using tuple = boost::hana::tuple<T...>;
-
+  template <class...  T>
+  struct tuple: boost::hana::tuple<T...> {
+    using boost::hana::tuple<T...>::tuple;
+    template <class N> auto operator[](N&& n)       = delete;
+    template <class N> auto operator[](N&& n) const = delete;
+    template <class N>
+    auto operator()(N&& n) {
+      return boost::hana::at(*this,std::forward<N>(n));
+    }
+    template <class N>
+    auto operator()(N&& n) const {
+      return boost::hana::at(*this,std::forward<N>(n));
+    }
+  };
+  
   template <class K, class V> struct dict;
   
   template <class T>
@@ -227,10 +239,6 @@ namespace qicq {
 
   //////////////////////////////////////////////////////////////////////////////
   // Traits
-  // Note: If they ever invent an is_callable trait that works with
-  // template methods (i.e., template<class> void operator() ...)
-  // where you don't have to know all the arg types, operator/ can be
-  // made more generic.
   //////////////////////////////////////////////////////////////////////////////
   template <class>   struct is_vec        : std::false_type {};
   template <class T> struct is_vec<vec<T>>: std::true_type  {};
@@ -254,9 +262,9 @@ namespace qicq {
   }
   
   template <class T, T N>
-    std::ostream& operator<<(std::ostream& os,
-                             const boost::hana::integral_constant<T,N>& t) {
-    return os << (T)t;
+  std::ostream& operator<<(std::ostream& os,
+                           const boost::hana::integral_constant<T,N>& t) {
+    return os << static_cast<T>(t);
   }
   
   template <class T, std::enable_if_t<!is_vec_v<T>>* = nullptr>
@@ -414,10 +422,10 @@ namespace qicq {
     }
 
     template <class... T>
-    auto make_tuple(T&&... x) {
-      return boost::hana::make_tuple(std::forward<T>(x)...);
+    auto tuple_cast(const boost::hana::tuple<T...>& x) {
+      return *reinterpret_cast<const tuple<T...>*>(&x);
     }
-  
+    
     ////////////////////////////////////////////////////////////////////////////
     // NonChainArg: things that aren't treated as arguments to
     // functions in / chaining
@@ -442,7 +450,7 @@ namespace qicq {
 
     template <class F, class... T>
     constexpr auto uniform_result_type(const F& f, const tuple<T...>& t) {
-      auto t0 = hana::type_c<decltype(f(t[0_c]))>;
+      auto t0 = hana::type_c<decltype(f(t(0_c)))>;
       return hana::all_of(t, [&](auto&& x){
           return hana::type_c<decltype(f(x))> == t0;});
     }
@@ -508,13 +516,15 @@ namespace qicq {
       template <class... T>
       auto operator()(const tuple<T...>& t) const {
         using namespace hana;
-        return if_(type_c<void> == type_c<decltype(f(t[0_c]))>,
+        return if_(type_c<void> == type_c<decltype(f(t(0_c)))>,
                    [&](auto&& x){for_each(x, f);},
                    [&](auto&& u){
                      return if_(!uniform_result_type(f,u),
-                                [&](auto&& x){return transform(x, f);},
+                                [&](auto&& x){
+                                  return tuple_cast(transform(x, f));
+                                },
                                 [&](auto&& x){ // uniform type so convert to vec
-                                  vec<decltype(f(u[0_c]))> r(size(x));
+                                  vec<decltype(f(u(0_c)))> r(size(x));
                                   int i=0;
                                   for_each(x, [&](auto&& e){r(i++)=f(e);});
                                   return r;
@@ -716,8 +726,8 @@ namespace qicq {
       }
       template <class... T>
       auto operator()(const tuple<T...>& t) const {
-        vec<decltype(f(t[0_c],t[0_c]))> r(hana::size(t));
-        r(0) = t[0_c];
+        vec<decltype(f(t(0_c),t(0_c)))> r(hana::size(t));
+        r(0) = t(0_c);
         if (1 < r.size()) {
           int i=1;
           hana::fold(t, [&](auto&& g,auto&& h){r(i++)=f(h,g);return h;});
@@ -741,7 +751,7 @@ namespace qicq {
       }
       template <class L, class... T>
         auto operator()(const L& lhs, const tuple<T...>& rhs) const {
-        vec<decltype(f(rhs[0_c],lhs))> r(hana::size(rhs));
+        vec<decltype(f(rhs(0_c),lhs))> r(hana::size(rhs));
         int i=0;
         hana::fold(rhs, lhs, [&](auto&& g,auto&& h){r(i++)=f(h,g);return h;});
         return r;
@@ -821,8 +831,8 @@ namespace qicq {
       }
       template <class... T>
       auto operator()(const tuple<T...>& t) const {
-        vec<decltype(f(t[0_c],t[0_c]))> r(hana::size(t));
-        r(0) = t[0_c];
+        vec<decltype(f(t(0_c),t(0_c)))> r(hana::size(t));
+        r(0) = t(0_c);
         int i = 1;
         hana::fold(t, [&](auto&& x, auto&& y){return r(i++)=f(x,y);});
         return r;
@@ -846,7 +856,7 @@ namespace qicq {
       }
       template <class L, class... T>
       auto operator()(const L& lhs, const tuple<T...>& rhs) const {
-        vec<decltype(f(lhs,rhs[0_c]))> r(hana::size(rhs));
+        vec<decltype(f(lhs,rhs(0_c)))> r(hana::size(rhs));
         int i = 0;
         hana::fold(rhs, lhs, [&](auto&& x, auto&& y){return r(i++)=f(x,y);});
         return r;
@@ -1286,7 +1296,7 @@ namespace qicq {
       template <class K, class V>
       V operator()(const dict<K,V>& x) const { return (*this)(x.val()); }
       template <class... T>
-      auto operator()(const tuple<T...>& x) const { return x[0_c]; }
+      auto operator()(const tuple<T...>& x) const { return x(0_c); }
       
       template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
       auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
@@ -2193,7 +2203,7 @@ namespace qicq {
   auto d(vec<K>&& k, vec<V>&& v) { return dict<K,V>(k,v); }
 
   template <class... T>
-  auto t(T&&... a) { return boost::hana::make_tuple(std::forward<T>(a)...); }
+  auto t(T&&... a) { return tuple<T...>(std::forward<T>(a)...); }
 
   template <class F>
   auto f(F&& f) { return detail::make_fun(f); }

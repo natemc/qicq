@@ -460,6 +460,13 @@ namespace {
 
   int add(int x, int y) { return x+y; }
 
+  // template <size_t N> struct X {};
+  // struct Y {
+  //   // Compiler can't do this
+  //   // see http://www.boost.org/doc/libs/1_61_0/libs/hana/doc/html/index.html#tutorial-appendix-constexpr
+  //   template <size_t N>
+  //   auto operator()(size_t N) const { return X<N>; }
+  // };
 } // namespace
 
 int main (int argc, const char* argv[]) {
