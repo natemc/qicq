@@ -10,7 +10,7 @@ clean:
 hunit.o: hunit.cpp hunit.h
 	clang++ $(FLAGS) $(INC) -c $(filter %.cpp,$^)
 
-install: libqicq.dylib qicq.h qicq_lambda.h qicq_math.h qicq_sym.h
+install: libqicq.dylib qicq.h qicq_fun.h qicq_lambda.h qicq_math.h qicq_sym.h
 	cp $(filter %.dylib,$^) /usr/local/lib
 	mkdir -p /usr/local/include/qicq
 	cp $(filter %.h,$^) /usr/local/include/qicq
