@@ -125,6 +125,15 @@ auto f = many(L3(x+y+z));
 cout << f(v(1,2,3),v(10,20,30),v(100,200,300)) << '\n'; // 111 222 333
 ```
 
+I'm considering merging ```both``` and ```many``` into ```each```; the reason to separate them is it reduces the number of overloads which makes compiler error reports shorter.
+
+Meanwhile, ```cross``` is an adverb in qicq:
+
+```
+cout << v(0,1)/join/cross/v(0,1,2) << '\n'; // (0 0) (0 1) (0 2) (1 0) (1 1) (1 2)
+cout << L2(v(x,1,y))/cross/v(0,1) << '\n';  // (0 1 0) (0 1 1) (1 1 0) (1 1 1)
+```
+
 Functions are generally all different types, so you have to put them in a tuple (not a vec) if you intend to loop over them:
 
 ```
