@@ -32,6 +32,7 @@ namespace qicq {
   detail::Except   except;
   detail::Find     find;
   detail::First    first;
+  detail::Flip     flip;
   detail::Group    group;
   detail::Iasc     iasc;
   detail::Idesc    idesc;

@@ -1377,6 +1377,19 @@ namespace qicq {
       auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
+    struct Flip {
+      template <class T>
+      vec<vec<T>> operator()(const vec<vec<T>>& x) const {
+        return x.empty()? x :
+          Each()([&](size_t i){return x(detail::Hole(),i);})
+            (Til()(x.front().size()));
+      }
+      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
+      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
+      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
+      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
+    };
+    
     struct Group {
       template <class T>
       auto operator()(const vec<T>& x) const {
@@ -2097,6 +2110,10 @@ namespace qicq {
       auto operator()(const vec<T>& x, const vec<U>& y) const {
         return EachLeft()(*this)(x,y);
       }
+      template <class K, class V, class U>
+      auto operator()(const dict<K,V>& x, const vec<U>& y) const {
+        return make_dict(x.key(), EachLeft()(*this)(x.val(),y));
+      }
     };
   
     struct Xbar {
@@ -2376,6 +2393,7 @@ namespace qicq {
   extern detail::Except   except;
   extern detail::Find     find;
   extern detail::First    first;
+  extern detail::Flip     flip;
   extern detail::Group    group;
   extern detail::Iasc     iasc;
   extern detail::Idesc    idesc;

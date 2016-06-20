@@ -601,6 +601,7 @@ int main (int argc, const char* argv[]) {
   cout << t(v(1,2,3),string("abc"))(0_c) << '\n';
 
   cout << v(v("ace"),v("bdf"))/dot/t(v(0,1),v(1,2)) << '\n';
+  cout << flip(v(2,3)/take/til(6)) << '\n';
 
   assert(detail::is_callable_v<detail::Plus(int,float)>);
 
