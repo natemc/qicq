@@ -2091,7 +2091,7 @@ namespace qicq {
       template <class T, class U>
       auto operator()(const T& x, const vec<U>& y) const {
         assert(2 == y.size());
-        return y(0)<=x && x<=y(1);
+        return Min()(y(0)<=x, x<=y(1));
       }
       template <class T, class U>
       auto operator()(const vec<T>& x, const vec<U>& y) const {

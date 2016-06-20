@@ -449,6 +449,10 @@ namespace {
     },
     "within returns vec<bool> for an vec on the lhs", []{
       ASSERT_MATCH(01110_b, v(2.5,3,5,8,10)/within/(v(3,8)));},
+    "within returns vec<bool> for two vecs on the rhs", []{
+      ASSERT_MATCH(0011110_b,
+                   5/within/(v(v(0,1,2,3,4,5,6), v(3,4,5,6,7,8,9))));
+    },
   };
   
   hunit::testcase xbar_tests[] = {
