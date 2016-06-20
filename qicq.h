@@ -1847,8 +1847,11 @@ namespace qicq {
       F f;
       BoundCross(const F& f_): f(f_) {}
       template <class T>
-      auto operator()(const T& t) const {
-        return Raze()(EachLeft()(EachRight()(f))(t,t));
+      auto operator()(const T& t) const { return (*this)(t,t); }
+      template <class L, class R>
+      auto operator()(L&& lhs, R&& rhs) const {
+        return Raze()(EachLeft()(EachRight()(f))(std::forward<L>(lhs),
+                                                 std::forward<R>(rhs)));
       }
       template <class T>
       auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
@@ -2155,6 +2158,14 @@ namespace qicq {
   template <class F>
   auto operator/(F&& f, const detail::Cross& c) {
     return c(std::forward<F>(f));
+  }
+  template <class F, class L>
+  auto operator/(const detail::FunLhs<F,L>& fl, const detail::Cross& c) {
+    return detail::make_funlhs(c(fl.f), fl.lhs);
+  }
+  template <class F, class L>
+  auto operator/(detail::FunLhs<F,L>&& fl, const detail::Cross& c) {
+    return detail::make_funlhs(c(fl.f), fl.lhs);
   }
 
   template <class F>
