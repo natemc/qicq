@@ -2087,6 +2087,18 @@ namespace qicq {
       }
     };
   
+    struct Within {
+      template <class T, class U>
+      auto operator()(const T& x, const vec<U>& y) const {
+        assert(2 == y.size());
+        return y(0)<=x && x<=y(1);
+      }
+      template <class T, class U>
+      auto operator()(const vec<T>& x, const vec<U>& y) const {
+        return EachLeft()(*this)(x,y);
+      }
+    };
+  
     struct Xbar {
       template <class T, class U,
         enable_if_t<is_integral_v<T> && is_integral_v<U>>* = nullptr>
@@ -2392,6 +2404,7 @@ namespace qicq {
   extern detail::Value    val;
   //extern detail::Vs vs; TODO
   extern detail::Where    where;
+  extern detail::Within   within;
   extern detail::Xbar     xbar;
 } // namespace qicq
 

@@ -60,5 +60,6 @@ namespace qicq {
   detail::Value    val;
   //detail::Vs vs; TODO
   detail::Where    where;
+  detail::Within   within;
   detail::Xbar     xbar;
 } // namespace qicq

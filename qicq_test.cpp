@@ -438,6 +438,18 @@ namespace {
     "where/vec<integral> is x#'!#x", []{
       ASSERT_MATCH(v(1LL,2,2,3,3,3,4,4,4,4), where/=til/5);},
   };
+
+  hunit::testcase within_tests[] = {
+    "within returns a bool for an atom on the lhs", []{
+      ASSERT_MATCH(true, 5/within/(v(3,8)));
+      ASSERT_MATCH(true, 3/within/(v(3,8)));
+      ASSERT_MATCH(true, 8/within/(v(3,8)));
+      ASSERT_MATCH(false, 2.5/within/(v(3,8)));
+      ASSERT_MATCH(false, 10/within/(v(3,8)));
+    },
+    "within returns vec<bool> for an vec on the lhs", []{
+      ASSERT_MATCH(01110_b, v(2.5,3,5,8,10)/within/(v(3,8)));},
+  };
   
   hunit::testcase xbar_tests[] = {
     "atom/xbar/vec rounds vec's elements down to multiples of atom", []{
@@ -481,6 +493,7 @@ namespace {
       union_tests,
       vec_tests,
       where_tests,
+      within_tests,
       xbar_tests,
     };
     return hunit::run(suites);
