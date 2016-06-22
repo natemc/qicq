@@ -510,24 +510,6 @@ namespace qicq {
           return hana::type_c<decltype(f(x))> == t0;});
     }
 
-    template <class F>
-    struct Fun {
-      F f;
-      Fun(const F& f_): f(f_) {}
-      template <class X>
-      auto operator()(X&& x) const { return f(std::forward<X>(x)); }
-      template <class X, class Y>
-      auto operator()(X&& x, Y&& y) const {
-        return f(std::forward<X>(x), std::forward<Y>(y));
-      }
-      template <class X, class Y, class Z>
-      auto operator()(X&& x, Y&& y, Z&& z) const {
-        return f(std::forward<X>(x), std::forward<Y>(y), std::forward<Z>(z));
-      }
-    };
-    template <class F>
-    Fun<F> make_fun(F&& f) { return Fun<F>(std::forward<F>(f)); }
-    
     template <class F, class L>
     struct FunLhs {
       F f;
@@ -2350,9 +2332,6 @@ namespace qicq {
   template <class... T>
   auto t(T&&... a) { return tuple<T...>(std::forward<T>(a)...); }
 
-  template <class F>
-  auto f(F&& f) { return detail::make_fun(f); }
-  
   //////////////////////////////////////////////////////////////////////////////
   // Tags
   //////////////////////////////////////////////////////////////////////////////

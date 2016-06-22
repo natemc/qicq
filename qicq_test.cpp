@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 #include <qicq/qicq.h>
+#include <qicq/qicq_adapt.h>
 #include <qicq/qicq_fun.h>
 #include <qicq/qicq_lambda.h>
 #include <qicq/qicq_math.h>
@@ -603,7 +604,11 @@ int main (int argc, const char* argv[]) {
   cout << v(v("ace"),v("bdf"))/dot/t(v(0,1),v(1,2)) << '\n';
   cout << flip(v(2,3)/take/til(6)) << '\n';
 
+  std::vector<char> p{'x','y','z','z','y'};
+  cout << f(p)/each/til(3) << '\n';
+
   assert(detail::is_callable_v<detail::Plus(int,float)>);
+  cout << 101_b*v(1,2,3) << '\n';
 
   return run_tests();
 }

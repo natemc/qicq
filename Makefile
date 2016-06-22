@@ -10,7 +10,7 @@ clean:
 hunit.o: hunit.cpp hunit.h
 	clang++ $(FLAGS) $(INC) -c $(filter %.cpp,$^)
 
-install: libqicq.dylib qicq.h qicq_fun.h qicq_lambda.h qicq_math.h qicq_sym.h
+install: libqicq.dylib qicq.h qicq_adapt.h qicq_fun.h qicq_lambda.h qicq_math.h qicq_sym.h
 	cp $(filter %.dylib,$^) /usr/local/lib
 	mkdir -p /usr/local/include/qicq
 	cp $(filter %.h,$^) /usr/local/include/qicq
@@ -27,5 +27,5 @@ qicq_fun.o: qicq_fun.cpp qicq_fun.h
 qicq_sym.o: qicq_sym.cpp qicq_sym.h 
 	clang++ $(FLAGS) $(INC) -c $(filter %.cpp,$^)
 
-qicq_test: qicq_test.cpp qicq.o qicq_fun.o qicq_math.h qicq_sym.o hunit.h hunit.o
+qicq_test: qicq_test.cpp qicq.o qicq_fun.o qicq_adapt.h qicq_math.h qicq_sym.o hunit.h hunit.o
 	clang++ $(FLAGS) $(INC) -o $@ $(filter %.cpp %.o,$^)
