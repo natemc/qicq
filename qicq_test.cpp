@@ -31,52 +31,12 @@ namespace {
   } while(0);
   
 ////////////////////////////////////////////////////////////////////////////////
-  hunit::testcase adverb_tests[] = {
+  hunit::testcase adverb_stacking_tests[] = {
   // cout << raze(v("abc")/join/right/left/v("def")) << '\n';
   // cout << typeid(v("abc")/join/right/left/v("def")).name() << '\n';
-    "each calls its lhs once for every element of its rhs", []{
-      ASSERT(all/=v(0,2,4,6,8) == (L1(2*x)/each/=til/5));},
-    "each works with all", []{
-      ASSERT(all/(10_b == all/each/v(11_b,10_b)));},
-    "right calls its lhs once for every element of its rhs", []{
-      ASSERT(all/conv/=v(v(0,0,0),v(0,1,2),v(0,2,4))/eq/=
-    	     til/3/L2(x*y)/right/=til/3);},
     "left&right stack to make cross", []{
       ASSERT_MATCH(v(v(.12,.22),v(.22,.32)),
       		   L1(x/L2(x+y)/left/right/x)(v(.1,.2)-.04));},
-    "both iterates over the lhs and rhs in parallel", []{
-      ASSERT_MATCH(v(v(1,4),v(2,5),v(3,6)), v(1,2,3)/join/both/v(4,5,6));},
-    "f/over/atom returns atom", []{
-      ASSERT_MATCH(42, plus/over/42);},
-    "f/over/vec reduces f over vec", []{
-      ASSERT_MATCH(45LL, L2(x+y)/over/=til/10)},
-    "atom/f/over/vec reduces f over vec with atom as the initial value", []{
-      ASSERT_MATCH(47LL, 2/plus/over/=til/10)},
-    "f/prior/vec computes f(vec[i],vec[i-1])", []{
-      ASSERT_MATCH(v(8,-5,2), minus/prior/v(8,3,5));},
-    "atom/f/prior/vec computes f(vec[i],vec[i-1]) w/initial value atom", []{
-      ASSERT_MATCH(v(4,-5,2), 4/minus/prior/v(8,3,5));},
-    "f/scan/atom returns atom", []{
-      ASSERT_MATCH(42, plus/scan/42);},
-    "f/scan/vec returns the prefix (f) over vec", []{
-      ASSERT_MATCH(v(0LL,1,3,6,10), plus/scan/=til/5);},
-    "atom/f/scan/vec returns the prefix (f) over vec w/initial value atom", []{
-      ASSERT_MATCH(v(2LL,3,5,8,12), 2/plus/scan/=til/5);},
-    "at/left works with functions on the lhs", []{
-      ASSERT_MATCH(v(v(0LL,2),v(3LL,5),v(6LL,8)),
-                   t(min,max)/at/left/right/=v(0,3,6)/cut/=til/9);},
-    "both works on tuples", []{
-      ASSERT_MATCH(t(5,7,9), t(1,2,3)/plus/both/t(4,5,6));},
-    "cross applies its fun to x X y", []{
-      ASSERT_MATCH(v(v(0,0),v(0,1),v(0,2),v(1,0),v(1,1),v(1,2)),
-                   v(0,1)/join/cross/v(0,1,2));
-    },
-    "monadic cross applies its arg to x X x", []{
-      ASSERT_MATCH(v(v(0,1,0),v(0,1,1),v(0,1,2),
-                     v(1,1,0),v(1,1,1),v(1,1,2),
-                     v(2,1,0),v(2,1,1),v(2,1,2)),
-                   L2(v(x,1,y))/cross/v(0,1,2));
-    },
   };
 
   hunit::testcase all_tests[] = {
@@ -104,6 +64,30 @@ namespace {
     "at's result conforms to the index", []{
       ASSERT_MATCH(v(v("acegi"),v("bdfhj")),
         	   v("abcdefghij")/at/v(2*til(5),1+2*til(5)));},
+  };
+  
+  hunit::testcase both_tests[] = {
+    "both iterates over the lhs and rhs in parallel", []{
+      ASSERT_MATCH(v(v(1,4),v(2,5),v(3,6)), v(1,2,3)/join/both/v(4,5,6));},
+    "both works on tuples", []{
+      ASSERT_MATCH(v(5,7,9), t(1,2,3)/plus/both/t(4,5,6));},
+    "both works on tuples and vecs together", []{
+      ASSERT_MATCH(v(5,7,9), v(1,2,3)/plus/both/t(4,5,6));},
+    "both works on tuples and vecs together", []{
+      ASSERT_MATCH(v(5,7,9), t(1,2,3)/plus/both/v(4,5,6));},
+  };
+  
+  hunit::testcase cross_tests[] = {
+    "cross applies its fun to x X y", []{
+      ASSERT_MATCH(v(v(0,0),v(0,1),v(0,2),v(1,0),v(1,1),v(1,2)),
+                   v(0,1)/join/cross/v(0,1,2));
+    },
+    "monadic cross applies its arg to x X x", []{
+      ASSERT_MATCH(v(v(0,1,0),v(0,1,1),v(0,1,2),
+                     v(1,1,0),v(1,1,1),v(1,1,2),
+                     v(2,1,0),v(2,1,1),v(2,1,2)),
+                   L2(v(x,1,y))/cross/v(0,1,2));
+    },
   };
   
   hunit::testcase cut_tests[] = {
@@ -166,6 +150,13 @@ namespace {
       ASSERT_MATCH(v(2,3), 1/drop/v(1,2,3));},
     "-atom/drop/vec drops the last atom elements from vec", []{
       ASSERT_MATCH(v(1,2), -1/drop/v(1,2,3));},
+  };
+
+  hunit::testcase each_tests[] = {
+    "each calls its lhs once for every element of its rhs", []{
+      ASSERT(all/=v(0,2,4,6,8) == (L1(2*x)/each/=til/5));},
+    "each works with all", []{
+      ASSERT(all/(10_b == all/each/v(11_b,10_b)));},
   };
 
   hunit::testcase enlist_tests[] = {
@@ -233,6 +224,12 @@ namespace {
       ASSERT_MATCH(v(1,2,3,4.2), v(1,2,3)/join/4.2);},
     "join(vec,vec) concats the vecs", []{
       ASSERT_MATCH(1+til/6, v(1LL,2,3)/join/v(4,5,6));},
+  };
+  
+  hunit::testcase left_tests[] = {
+    "at/left works with functions on the lhs", []{
+      ASSERT_MATCH(v(v(0LL,2),v(3LL,5),v(6LL,8)),
+                   t(min,max)/at/left/right/=v(0,3,6)/cut/=til/9);},
   };
 
   hunit::testcase match_tests[] = {
@@ -302,6 +299,22 @@ namespace {
     },
   };
   
+  hunit::testcase over_tests[] = {
+    "f/over/atom returns atom", []{
+      ASSERT_MATCH(42, plus/over/42);},
+    "f/over/vec reduces f over vec", []{
+      ASSERT_MATCH(45LL, L2(x+y)/over/=til/10)},
+    "atom/f/over/vec reduces f over vec with atom as the initial value", []{
+      ASSERT_MATCH(47LL, 2/plus/over/=til/10)},
+  };
+  
+  hunit::testcase prior_tests[] = {
+    "f/prior/vec computes f(vec[i],vec[i-1])", []{
+      ASSERT_MATCH(v(8,-5,2), minus/prior/v(8,3,5));},
+    "atom/f/prior/vec computes f(vec[i],vec[i-1]) w/initial value atom", []{
+      ASSERT_MATCH(v(4,-5,2), 4/minus/prior/v(8,3,5));},
+  };
+  
   hunit::testcase rank_tests[] = {
     "rank/vec returns the relative rank of each element of vec", []{
       ASSERT_MATCH(v(3LL,6,4,5,2,0,1), rank/v(3,8,4,6,2,0,1));},
@@ -321,6 +334,12 @@ namespace {
       ASSERT_MATCH(v("abc"), rev/v("cba"));},
   };
   
+  hunit::testcase right_tests[] = {
+    "right calls its lhs once for every element of its rhs", []{
+      ASSERT(all/conv/=v(v(0,0,0),v(0,1,2),v(0,2,4))/eq/=
+    	     til/3/L2(x*y)/right/=til/3);},
+  };
+  
   hunit::testcase rot_tests[] = {
     "atom/rot/vec rotates vec left atom positions", []{
       ASSERT_MATCH(v("defghijabc"), 3/rot/v("abcdefghij"));},
@@ -330,6 +349,15 @@ namespace {
       ASSERT_MATCH(v("cdefghijab"), 12/rot/v("abcdefghij"));
       ASSERT_MATCH(v("ijabcdefgh"), -12/rot/v("abcdefghij"));
     },
+  };
+  
+  hunit::testcase scan_tests[] = {
+    "f/scan/atom returns atom", []{
+      ASSERT_MATCH(42, plus/scan/42);},
+    "f/scan/vec returns the prefix (f) over vec", []{
+      ASSERT_MATCH(v(0LL,1,3,6,10), plus/scan/=til/5);},
+    "atom/f/scan/vec returns the prefix (f) over vec w/initial value atom", []{
+      ASSERT_MATCH(v(2LL,3,5,8,12), 2/plus/scan/=til/5);},
   };
   
   hunit::testcase signum_tests[] = {
@@ -463,15 +491,18 @@ namespace {
 
   int run_tests() {
     const hunit::testsuite suites[] = {
-      adverb_tests,
+      adverb_stacking_tests,
       all_tests,
       asc_tests,
       at_tests,
+      both_tests,
+      cross_tests,
       cut_tests,
       desc_tests,
       dict_tests,
       distinct_tests,
       drop_tests,
+      each_tests,
       enlist_tests,
       except_tests,
       find_tests,
@@ -481,15 +512,20 @@ namespace {
       in_tests,
       inter_tests,
       join_tests,
+      left_tests,
       match_tests,
       max_tests,
       med_tests,
       min_tests,
       not_tests,
+      over_tests,
+      prior_tests,
       rank_tests,
       raze_tests,
       rev_tests,
+      right_tests,
       rot_tests,
+      scan_tests,
       signum_tests,
       sublist_tests,
       sum_tests,

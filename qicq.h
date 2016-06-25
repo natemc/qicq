@@ -510,6 +510,42 @@ namespace qicq {
           return hana::type_c<decltype(f(x))> == t0;});
     }
 
+    template <class F, class... L, class... R>
+    constexpr auto // NOT bool but hana::Logical-type-thing
+    uniform_result_type(const F& f, const tuple<L...>& x, const tuple<R...>& y)
+    {
+      static_assert(sizeof...(L) == sizeof...(R));
+      using hana::type_c;
+      auto t0 = type_c<decltype(f(x(0_c),y(0_c)))>;
+      return hana::all_of(std::make_integer_sequence<int,sizeof...(L)>(),
+                          [&](auto&& i){
+                            return type_c<decltype(f(x(i),y(i)))> == t0;});
+    }
+    
+    template <class F, class L, class... R>
+    constexpr auto // NOT bool but hana::Logical-type-thing
+    uniform_result_type(const F& f, const vec<L>& x, const tuple<R...>& y)
+    {
+      assert(x.size() == sizeof...(R));
+      using hana::type_c;
+      auto t0 = type_c<decltype(f(x(0_c),y(0_c)))>;
+      return hana::all_of(std::make_integer_sequence<int,sizeof...(R)>(),
+                          [&](auto&& i){
+                            return type_c<decltype(f(x(i),y(i)))> == t0;});
+    }
+    
+    template <class F, class... L, class R>
+    constexpr auto // NOT bool but hana::Logical-type-thing
+    uniform_result_type(const F& f, const tuple<L...>& x, const vec<R>& y)
+    {
+      assert(y.size() == sizeof...(L));
+      using hana::type_c;
+      auto t0 = type_c<decltype(f(x(0_c),y(0_c)))>;
+      return hana::all_of(std::make_integer_sequence<int,sizeof...(L)>(),
+                          [&](auto&& i){
+                            return type_c<decltype(f(x(i),y(i)))> == t0;});
+    }
+    
     template <class F, class L>
     struct FunLhs {
       F f;
@@ -551,21 +587,21 @@ namespace qicq {
       }
 ////////////////////////////////////////////////////////////////////////////////
       template <class... T>
-      auto operator()(const tuple<T...>& t) const {
+      auto operator()(const tuple<T...>& x) const {
         using namespace hana;
-        return if_(type_c<void> == type_c<decltype(f(t(0_c)))>,
-                   [&](auto&& x){for_each(x, f);},
-                   [&](auto&& u){
-                     return if_(!uniform_result_type(f,u),
+        return if_(type_c<void> == type_c<decltype(f(x(0_c)))>,
+                   [&](auto&& x){for_each(x,f);},
+                   [&](auto&& x){
+                     return if_(!uniform_result_type(f,x),
                                 [&](auto&& x){
-                                  return make_tuple(transform(x, f));
+                                  return make_tuple(transform(x,f));
                                 },
-                                [&](auto&& x){ // uniform type so convert to vec
-                                  vec<decltype(f(u(0_c)))> r(size(x));
+                                [&](auto&& x){ // xform to vec when uniform
+                                  vec<decltype(f(x(0_c)))> r(size(x));
                                   int i=0;
                                   for_each(x, [&](auto&& e){r(i++)=f(e);});
                                   return r;
-                                })(u);})(t);
+                                })(x);})(x);
       }
 
       template<class K, class V, enable_if_t<is_void_result_v<F(V)>>* =nullptr>
@@ -711,22 +747,75 @@ namespace qicq {
         return r;
       }
 
-      // Expressing the enable_if might be possible with hana ...
-      /* template <class... L, class... R, */
-      /*   enable_if_t<is_void_result_v<F(L...,R...)>>* =nullptr> */
-      /* auto operator()(const tuple<L...>& x, const tuple<R...>& y) const { */
-      /*   // What's wrong with this assert? */
-      /*   //        static_assert(hana::size(x) == hana::size(y)); */
-      /*   hana::for_each(hana::zip(x,y), [&](auto&& h){return f(h[0_c],h[1_c]);}); */
-      /* } */
       template <class... L, class... R>
-      //        enable_if_t<!is_void_result_v<F(L...,R...)>>* =nullptr>
       auto operator()(const tuple<L...>& x, const tuple<R...>& y) const {
-        // What's wrong with this assert?
-        //        static_assert(hana::size(x) == hana::size(y));
-        return make_tuple
-          (hana::transform(hana::zip(x,y),
-                           [&](auto&& h){return f(h[0_c],h[1_c]);}));
+        static_assert(sizeof...(L) == sizeof...(R));
+        using namespace hana;
+        using I = std::make_index_sequence<sizeof...(L)>;
+        using first_result_t = decltype(f(x(0_c),y(0_c)));
+        return if_(type_c<void> == type_c<first_result_t>,
+                   [&]{for_each(I(), [&](auto&& i){f(x(i),y(i));});},
+                   [&]{
+                     return if_(!uniform_result_type(f,x,y),
+                                [&]{return make_tuple(zip_with(f,x,y));},
+                                [&]{
+                                  vec<first_result_t> r(sizeof...(L));
+                                  for_each(I(),
+                                           [&](auto&& i){r(i)=f(x(i),y(i));});
+                                  return r;
+                                })();})();
+      }
+
+      template <class L, class... R>
+      auto operator()(const vec<L>& x, const tuple<R...>& y) const {
+        assert(x.size() == hana::size(y));
+        using namespace hana;
+        using I = std::make_index_sequence<sizeof...(R)>;
+        using first_result_t = decltype(f(x(0_c),y(0_c)));
+        return if_(type_c<void> == type_c<first_result_t>,
+                   [&]{for_each(I(), [&](auto&& i){f(x(i),y(i));});},
+                   [&]{
+                     return if_(!uniform_result_type(f,x,y),
+                                [&]{
+                                  int i=0;
+                                  return make_tuple
+                                    (transform(y,
+                                               [&](auto&& p){
+                                                 return f(x(i++),p);
+                                               }));
+                                },
+                                [&]{
+                                  vec<first_result_t> r(sizeof...(R));
+                                  for_each(I(),
+                                           [&](auto&& i){r(i)=f(x(i),y(i));});
+                                  return r;
+                                })();})();
+      }
+
+      template <class... L, class R>
+      auto operator()(const tuple<L...>& x, const vec<R>& y) const {
+        assert(hana::size(x) == y.size());
+        using namespace hana;
+        using I = std::make_index_sequence<sizeof...(L)>;
+        using first_result_t = decltype(f(x(0_c),y(0_c)));
+        return if_(type_c<void> == type_c<first_result_t>,
+                   [&]{for_each(I(), [&](auto&& i){f(x(i),y(i));});},
+                   [&]{
+                     return if_(!uniform_result_type(f,x,y),
+                                [&]{
+                                  int i=0;
+                                  return make_tuple
+                                    (transform(x,
+                                               [&](auto&& p){
+                                                 return f(p,y(i++));
+                                               }));
+                                },
+                                [&]{
+                                  vec<first_result_t> r(sizeof...(L));
+                                  for_each(I(),
+                                           [&](auto&& i){r(i)=f(x(i),y(i));});
+                                  return r;
+                                })();})();
       }
     };
     struct EachBoth: Adverb {
