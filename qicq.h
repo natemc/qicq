@@ -1138,6 +1138,7 @@ namespace qicq {
     // Functions
     ////////////////////////////////////////////////////////////////////////////
     struct Til {
+      static const size_t arity = 1;
       vec<int64_t> operator()(int64_t n) const {
         vec<int64_t> r(n);
         std::iota(std::begin(r), std::end(r), 0);
@@ -1150,27 +1151,27 @@ namespace qicq {
     struct Amend {
       template <class T, class U, class F>
       auto operator()(vec<T> x, const U& i, const F& f) const {
-        x[i] = f(x[i]);
+        x(i) = f(x(i));
         return x;
       }
       template <class T, class U, class F>
       auto operator()(vec<T>&& x, const U& i, const F& f) const {
-        x[i] = f(x[i]);
+        x(i) = f(x(i));
         return x;
       }
       template <class K, class V, class U, class F>
       auto operator()(dict<K,V> x, const U& i, const F& f) const {
-        x[i] = f(x[i]);
+        x(i) = f(x(i));
         return x;
       }
       template <class K, class V, class U, class F>
       auto operator()(dict<K,V>&& x, const U& i, const F& f) const {
-        x[i] = f(x[i]);
+        x(i) = f(x(i));
         return x;
       }
     };
 
-    struct At {
+    struct At: NonChainArg {
       template <class F, class I>
       auto operator()(const F& f, const I& i) const { return f(i); }
 
@@ -2209,43 +2210,27 @@ namespace qicq {
       /*   return x*(y/x); */
       /* } */
     };
+
+    auto has_arity_one = hana::is_valid([](auto&& x)->decltype(x.arity){
+        return 1==x.arity;});
   } // namespace detail
   
   //////////////////////////////////////////////////////////////////////////////
   // op/ as chain builder
   //////////////////////////////////////////////////////////////////////////////
   template <class F, class L,
-    std::enable_if_t<!std::is_same<L,detail::Til>::value>* = nullptr>
+    std::enable_if_t<detail::is_non_chain_arg_v<F>>* = nullptr>
   auto operator/(const L& x, const F& f) {
     return detail::make_funlhs(f, x);
   }
-  
-  /* template <class R, class A1, class A2, class L, */
-  /*   std::enable_if_t<!std::is_same<L,detail::Til>::value>* = nullptr> */
-  /* auto operator/(const L& x, R(*f)(A1,A2)) { */
-  /*   return detail::make_funlhs(f, x); */
-  /* } */
-  
-  /* template <class R, class A1, class A2, class L, */
-  /*   std::enable_if_t<!std::is_same<L,detail::Til>::value>* = nullptr> */
-  /* auto operator/(const L& x, R(&f)(A1,A2)) { */
-  /*   return detail::make_funlhs(f, x); */
-  /* } */
-  
-  /* template <class F, class T, */
-  /*   std::enable_if_t<!detail::is_non_chain_arg_v<T> && */
-  /*   detail::is_same_v<std::result_of_t<F(T)>,std::result_of_t<F(T)>>>* =nullptr> */
-  /* auto operator/(const F& f, const T& x) { */
-  /*   static_assert(!detail::is_non_chain_arg_v<T>, "wtf"); */
-  /*   return f(x); */
-  /* } */
-  
-  // F&& or L&& w/std::forward makes the compiler go nuts :-(
-  /* template <class F, class L, */
-  /*   std::enable_if_t<!decays_same<L,detail::Til>::value>* = nullptr> */
-  /* auto operator/(L&& x, F&& f) { */
-  /*   return detail::make_funlhs(std::forward<F>(f), std::forward<L>(x)); */
-  /* } */
+  template <class F, class L,
+    std::enable_if_t<!detail::is_non_chain_arg_v<F>>* = nullptr>
+  auto operator/(const L& x, const F& f) {
+    using namespace boost::hana;
+    return if_(detail::has_arity_one(x),
+               [&](auto&& x){return x(f);},
+               [&](auto&& x){return detail::make_funlhs(f,x);})(x);
+  }
 
   template <class F>
   auto operator/(F&& f, const detail::Dot& d) {
