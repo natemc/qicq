@@ -514,7 +514,8 @@ namespace qicq {
     constexpr auto // NOT bool but hana::Logical-type-thing
     uniform_result_type(const F& f, const tuple<L...>& x, const tuple<R...>& y)
     {
-      static_assert(sizeof...(L) == sizeof...(R));
+      static_assert(sizeof...(L) == sizeof...(R),
+                    "uniform_result_type requires equal arg lengths");
       using hana::type_c;
       auto t0 = type_c<decltype(f(x(0_c),y(0_c)))>;
       return hana::all_of(std::make_integer_sequence<int,sizeof...(L)>(),
@@ -749,7 +750,8 @@ namespace qicq {
 
       template <class... L, class... R>
       auto operator()(const tuple<L...>& x, const tuple<R...>& y) const {
-        static_assert(sizeof...(L) == sizeof...(R));
+        static_assert(sizeof...(L) == sizeof...(R),
+                      "both requires equal arg lengths");
         using namespace hana;
         using I = std::make_index_sequence<sizeof...(L)>;
         using first_result_t = decltype(f(x(0_c),y(0_c)));
@@ -2402,9 +2404,9 @@ namespace qicq {
   // Creation convenience functions
   //////////////////////////////////////////////////////////////////////////////
   template <class... T>
-  auto v(const T&... a) {
+  auto v(T&&... a) {
     vec<std::common_type_t<T...>> r(sizeof...(a));
-    detail::vbuild(std::begin(r), a...);
+    detail::vbuild(std::begin(r), std::forward<T>(a)...);
     return r;
   }
 

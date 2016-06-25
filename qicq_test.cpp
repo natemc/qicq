@@ -643,6 +643,8 @@ int main (int argc, const char* argv[]) {
   std::vector<char> p{'x','y','z','z','y'};
   cout << f(p)/each/til(3) << '\n';
 
+  auto q = v("asdf","xcvb");
+
   assert(detail::is_callable_v<detail::Plus(int,float)>);
   cout << 101_b*v(1,2,3) << '\n';
 
