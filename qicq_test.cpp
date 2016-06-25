@@ -544,6 +544,7 @@ namespace {
     double operator()(char, int&);
     float operator()(int) { return 1.0; }
   };
+  std::ostream& operator<<(std::ostream& os, const S&) { return os << 'S'; }
 
   template <class T>
   std::result_of_t<T(int)> g(T& t) {
@@ -644,6 +645,9 @@ int main (int argc, const char* argv[]) {
   cout << f(p)/each/til(3) << '\n';
 
   auto q = v("asdf","xcvb");
+  q/V2(cout<<"hey"<<x<<'\t'<<y<<'\n')/both/t(0,S());
+  //  v("uTex0","uColor")/u/both/t(0,color(0))
+
 
   assert(detail::is_callable_v<detail::Plus(int,float)>);
   cout << 101_b*v(1,2,3) << '\n';

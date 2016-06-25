@@ -768,56 +768,56 @@ namespace qicq {
                                 })();})();
       }
 
-      template <class L, class... R>
-      auto operator()(const vec<L>& x, const tuple<R...>& y) const {
+      template <class L, class R0, class... RR,
+        enable_if_t<is_void_result_v<F(L,R0)>>* = nullptr>
+      auto operator()(const vec<L>& x, const tuple<R0,RR...>& y) const {
+        assert(x.size() == hana::size(y));
+        hana::for_each(std::make_index_sequence<sizeof...(RR)+1>(),
+                       [&](auto&& i){f(x(i),y(i));});
+      }
+      template <class L, class R0, class... RR,
+        enable_if_t<!is_void_result_v<F(L,R0)>>* = nullptr>
+      auto operator()(const vec<L>& x, const tuple<R0,RR...>& y) const {
         assert(x.size() == hana::size(y));
         using namespace hana;
-        using I = std::make_index_sequence<sizeof...(R)>;
-        using first_result_t = decltype(f(x(0_c),y(0_c)));
-        return if_(type_c<void> == type_c<first_result_t>,
-                   [&]{for_each(I(), [&](auto&& i){f(x(i),y(i));});},
-                   [&]{
-                     return if_(!uniform_result_type(f,x,y),
-                                [&]{
-                                  int i=0;
-                                  return make_tuple
-                                    (transform(y,
-                                               [&](auto&& p){
-                                                 return f(x(i++),p);
-                                               }));
-                                },
-                                [&]{
-                                  vec<first_result_t> r(sizeof...(R));
-                                  for_each(I(),
-                                           [&](auto&& i){r(i)=f(x(i),y(i));});
-                                  return r;
-                                })();})();
+        return if_(!uniform_result_type(f,x,y),
+                   [&](){
+                     int i=0;
+                     return make_tuple
+                       (transform(y,[&](auto&& p){return f(x(i++),p);}));
+                   },
+                   [&](){
+                     vec<decltype(f(x(0),y(0_c)))> r(sizeof...(RR)+1);
+                     for_each(std::make_index_sequence<sizeof...(RR)+1>(),
+                              [&](auto&& i){r(i)=f(x(i),y(i));});
+                     return r;
+                   })();
       }
 
-      template <class... L, class R>
-      auto operator()(const tuple<L...>& x, const vec<R>& y) const {
+      template <class L0, class... LL, class R,
+        enable_if_t<is_void_result_v<F(L0,R)>>* = nullptr>
+      auto operator()(const tuple<L0,LL...>& x, const vec<R>& y) const {
+        assert(hana::size(x) == y.size());
+        hana::for_each(std::make_index_sequence<sizeof...(LL)+1>(),
+                       [&](auto&& i){f(x(i),y(i));});
+      }
+      template <class L0, class... LL, class R,
+        enable_if_t<!is_void_result_v<F(L0,R)>>* = nullptr>
+      auto operator()(const tuple<L0,LL...>& x, const vec<R>& y) const {
         assert(hana::size(x) == y.size());
         using namespace hana;
-        using I = std::make_index_sequence<sizeof...(L)>;
-        using first_result_t = decltype(f(x(0_c),y(0_c)));
-        return if_(type_c<void> == type_c<first_result_t>,
-                   [&]{for_each(I(), [&](auto&& i){f(x(i),y(i));});},
+        return if_(!uniform_result_type(f,x,y),
                    [&]{
-                     return if_(!uniform_result_type(f,x,y),
-                                [&]{
-                                  int i=0;
-                                  return make_tuple
-                                    (transform(x,
-                                               [&](auto&& p){
-                                                 return f(p,y(i++));
-                                               }));
-                                },
-                                [&]{
-                                  vec<first_result_t> r(sizeof...(L));
-                                  for_each(I(),
-                                           [&](auto&& i){r(i)=f(x(i),y(i));});
-                                  return r;
-                                })();})();
+                     int i=0;
+                     return make_tuple
+                       (transform(x,[&](auto&& p){return f(p,y(i++));}));
+                   },
+                   [&]{
+                     vec<decltype(f(x(0_c),y(0)))> r(sizeof...(LL)+1);
+                     for_each(std::make_index_sequence<sizeof...(LL)+1>(),
+                              [&](auto&& i){r(i)=f(x(i),y(i));});
+                     return r;
+                   })();
       }
     };
     struct EachBoth: Adverb {
