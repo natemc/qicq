@@ -649,6 +649,10 @@ int main (int argc, const char* argv[]) {
 
   auto w = L1(where/x);
   cout << w/(til/5) << '\n';
+
+  auto draw = V2(cout << x << '\t' << y << '\n');
+  const int n = 10;
+  V1(2*M_PI*x/=draw/x)/each/=til/n/float(n);
   
   assert(detail::is_callable_v<detail::Plus(int,float)>);
   cout << 101_b*v(1,2,3) << '\n';

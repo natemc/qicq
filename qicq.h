@@ -2345,8 +2345,7 @@ namespace qicq {
   //////////////////////////////////////////////////////////////////////////////
   // op/= as R->L chain builder
   //////////////////////////////////////////////////////////////////////////////
-  template <class F, class R,
-    std::enable_if_t<!std::is_same<F,detail::Til>::value>* = nullptr>
+  template <class F, class R>
   auto operator/=(const F& f, const R& x) {
     return boost::hana::if_(detail::has_arity_one(f),
                             [&](auto&& x){return f(x);},
@@ -2354,12 +2353,16 @@ namespace qicq {
   }
   
   template <class L, class F, class R>
-  auto operator/=(const detail::FunLhs<F,L>& f, const R& r) { return f(r); }
+  auto operator/=(const detail::FunLhs<F,L>& f, const R& y) { return f(y); }
+  template <class L, class F, class R>
+  auto operator/=(L&& x, const detail::FunLhs<F,R>& f) {
+    return f.lhs(std::forward<L>(x), f.f); // Consider lhs/=f/rhs
+  }
 
   template <class L, class F, class R>
-  auto operator/(const L& l_, const detail::FunRhs<F,R>& x) { return x(l_); }
+  auto operator/(const L& x, const detail::FunRhs<F,R>& f) { return f(x); }
   template <class L, class F, class R>
-  auto operator/=(const L& l_, const detail::FunRhs<F,R>& x) { return x(l_); }
+  auto operator/=(const L& x, const detail::FunRhs<F,R>& f) { return f(x); }
   
   template <class F, class R>
   auto operator/=(const detail::BoundCross<F>& e, R&& x) {
