@@ -2226,10 +2226,9 @@ namespace qicq {
   template <class F, class L,
     std::enable_if_t<!detail::is_non_chain_arg_v<F>>* = nullptr>
   auto operator/(const L& x, const F& f) {
-    using namespace boost::hana;
-    return if_(detail::has_arity_one(x),
-               [&](auto&& x){return x(f);},
-               [&](auto&& x){return detail::make_funlhs(f,x);})(x);
+    return boost::hana::if_(detail::has_arity_one(x),
+                            [&](auto&& x){return x(f);},
+                            [&](auto&& x){return detail::make_funlhs(f,x);})(x);
   }
 
   template <class F>
@@ -2349,7 +2348,9 @@ namespace qicq {
   template <class F, class R,
     std::enable_if_t<!std::is_same<F,detail::Til>::value>* = nullptr>
   auto operator/=(const F& f, const R& x) {
-    return detail::make_funrhs(f, x);
+    return boost::hana::if_(detail::has_arity_one(f),
+                            [&](auto&& x){return f(x);},
+                            [&](auto&& x){return detail::make_funrhs(f,x);})(x);
   }
   
   template <class L, class F, class R>
