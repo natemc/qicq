@@ -283,6 +283,7 @@ namespace {
     },
     "max can be applied monadically", []{
       ASSERT_MATCH(10, max(v(10,3,8,1,5)));},
+    // TODO fix this
     // "max con converge on a multi-dimensional container", []{
     //   ASSERT_MATCH(10, max/conv/v(v(3,10,8),v(1,5,7)));},
   };
@@ -467,6 +468,15 @@ namespace {
     },
   };
 
+  hunit::testcase tie_tests[] = {
+    "tie destructures vecs", []{
+      vec<int> xs, ys;
+      tie(xs,ys) = v(v(1,2,3),v(4,5,6));
+      ASSERT_MATCH(v(1,2,3), xs);
+      ASSERT_MATCH(v(4,5,6), ys);
+    },
+  };
+  
   hunit::testcase union_tests[] = {
     "lhs/union_/rhs returns the set union of lhs and rhs", []{
       ASSERT_MATCH(v(1,2,3,4,5,6,7), v(1,2,3,4,5)/union_/v(3,4,5,6,7));},
@@ -544,6 +554,7 @@ namespace {
       sublist_tests,
       sum_tests,
       take_tests,
+      tie_tests,
       tuple_tests,
       union_tests,
       vec_tests,

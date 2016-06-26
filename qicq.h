@@ -2132,6 +2132,23 @@ namespace qicq {
       }
     };
 
+    template <class... T>
+    struct Tie {
+      tuple<T*...> t;
+
+      template <class... U>
+      Tie(U*... u): t(u...) {}
+      
+      template <class U>
+      Tie& operator=(U&& u) {
+        hana::for_each(std::make_index_sequence<sizeof...(T)>(),
+                       [&](auto&& i){
+                         *t(i) = std::forward<decltype(u(i))>(u(i));
+                       });
+        return *this;
+      }
+    };
+    
     struct Union {
       template <class T, class U>
       auto operator()(const vec<T>& x, const vec<U>& y) const {
@@ -2429,6 +2446,9 @@ namespace qicq {
 
   template <class... T>
   auto t(T&&... a) { return tuple<T...>(std::forward<T>(a)...); }
+
+  template <class... T>
+  detail::Tie<T...> tie(T&... t) { return detail::Tie<T...>(&t...); }
 
   //////////////////////////////////////////////////////////////////////////////
   // Tags
