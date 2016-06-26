@@ -178,6 +178,17 @@ namespace {
       ASSERT_MATCH(v(2LL,1), v(1,3,5,7,9)/find/v(5,3));},
   };
 
+  hunit::testcase gen_tests[] = {
+    "gen invokes its rhs repeatedly (lhs times) and returns the results", []{
+      int64_t i=0;
+      ASSERT_MATCH(til/10, 10/gen/L0(i++));
+    },
+    "gen can gen a box analogously to take", []{
+      int64_t i=0;
+      ASSERT_MATCH(v(2,5)/take/=til/10, v(2,5)/gen/L0(i++));
+    },
+  };
+  
   hunit::testcase group_tests[] = {
     "group/vec creates a dict mapping vec's values to their indices", []{
       ASSERT_MATCH(d(v(4,0,2,1,3),
@@ -272,6 +283,8 @@ namespace {
     },
     "max can be applied monadically", []{
       ASSERT_MATCH(10, max(v(10,3,8,1,5)));},
+    // "max con converge on a multi-dimensional container", []{
+    //   ASSERT_MATCH(10, max/conv/v(v(3,10,8),v(1,5,7)));},
   };
   
   hunit::testcase med_tests[] = {
@@ -506,6 +519,7 @@ namespace {
       enlist_tests,
       except_tests,
       find_tests,
+      gen_tests,
       group_tests,
       iasc_tests,
       idesc_tests,

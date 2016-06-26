@@ -33,6 +33,7 @@ namespace qicq {
   detail::Find     find;
   detail::First    first;
   detail::Flip     flip;
+  detail::Gen      gen;
   detail::Group    group;
   detail::Iasc     iasc;
   detail::Idesc    idesc;

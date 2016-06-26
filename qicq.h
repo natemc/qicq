@@ -744,7 +744,7 @@ namespace qicq {
         dict<K,R> r;
         for (const K& k: lhs.key())
           if (rhs.has(k))
-            r[k] = f(lhs[k],rhs[k]);
+            r(k) = f(lhs(k),rhs(k));
         return r;
       }
 
@@ -2088,6 +2088,24 @@ namespace qicq {
       }
     };
   
+    struct Gen { // invoke f() n times
+      // n comes first like take
+      template <class F>
+      auto operator()(int64_t n, F&& f) const {
+        vec<result_of_t<decay_t<F>()>> r(n);
+        std::generate(r.begin(), r.end(), std::forward<F>(f));
+        return r;
+      }
+      template <class T, class F>
+      auto operator()(const vec<T>& rc, F&& f) const {
+        static_assert(std::is_integral<T>::value,
+                      "gen(2-D) shape must be 2 integers");
+        assert(2 == rc.size());
+        assert(0<=rc.front() && 0<=rc.back());
+        return Take()(rc, (*this)(rc.front() * rc.back(), std::forward<F>(f)));
+      }
+    };
+  
     struct Sublist {
       template <class T>
       auto operator()(int64_t n, const vec<T>& x) const {
@@ -2453,6 +2471,7 @@ namespace qicq {
   extern detail::Find     find;
   extern detail::First    first;
   extern detail::Flip     flip;
+  extern detail::Gen      gen;
   extern detail::Group    group;
   extern detail::Iasc     iasc;
   extern detail::Idesc    idesc;

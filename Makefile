@@ -1,6 +1,6 @@
 INC=-I. -I.. -I/usr/local/include
 LIB=-L/usr/local/lib
-FLAGS=-std=c++14 -g
+FLAGS=-std=c++14 -O3
 
 all: libqicq.dylib qicq_test
 
