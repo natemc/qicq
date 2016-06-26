@@ -1133,19 +1133,20 @@ namespace qicq {
     return detail::Each()([](const V& t){return !t;})(x);
   }
   
+  struct Unary {
+    static constexpr size_t arity = 1;
+  };
+    
   namespace detail {
     ////////////////////////////////////////////////////////////////////////////
     // Functions
     ////////////////////////////////////////////////////////////////////////////
-    struct Til {
-      static const size_t arity = 1;
+    struct Til: Unary {
       vec<int64_t> operator()(int64_t n) const {
         vec<int64_t> r(n);
         std::iota(std::begin(r), std::end(r), 0);
         return r;
       }
-      vec<int64_t> operator/(int64_t n) const { return (*this)(n); }
-      vec<int64_t> operator/=(int64_t n) const { return (*this)(n); }
     };
 
     struct Amend {
@@ -1219,7 +1220,7 @@ namespace qicq {
   }
   
   namespace detail {
-    struct Avg {
+    struct Avg: Unary {
       typedef double converge_type;
       
       template <class T>
@@ -1229,13 +1230,9 @@ namespace qicq {
       }
       template <class K, class V>
       auto operator()(const dict<K,V>& x) const { return (*this)(x.val()); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
-    struct Bool {
+    struct Bool: Unary {
       template <class T>
       bool operator()(const T& t) const { return t; }
       template <class T>
@@ -1249,10 +1246,6 @@ namespace qicq {
         hana::for_each(x, [&](auto&& e){r(i++)=e;});
         return r;
       }
-      template <class T>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
     struct Compare {
@@ -1290,7 +1283,7 @@ namespace qicq {
       }
     };
 
-    struct Deltas {
+    struct Deltas: Unary {
       template <class T>
       auto operator()(const vec<T>& x) const {
         return EachPrior()(std::minus<T>())(x);
@@ -1299,13 +1292,9 @@ namespace qicq {
       auto operator()(const dict<K,V>& x) const {
         return make_dict(x.key(), (*this)(x.val()));
       }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
-    struct Distinct {
+    struct Distinct: Unary {
       template <class T>
       vec<T> operator()(const vec<T>& x) const {
         vec<T> r;
@@ -1315,10 +1304,6 @@ namespace qicq {
         return r;
       }
       // TODO tuple
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
     struct Dot: NonChainArg {
@@ -1393,13 +1378,9 @@ namespace qicq {
       // TODO tuple
     };
   
-    struct Enlist {
+    struct Enlist: Unary {
       template <class T>
       vec<T> operator()(const T& x) const { return vec<T>(1, x); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
     struct Find {
@@ -1434,7 +1415,7 @@ namespace qicq {
       // TODO tuple.  hana::find doesn't do what we want
     };
 
-    struct First {
+    struct First: Unary {
       template <class T>
       T operator()(const vec<T>& x) const {
         assert(x.size());
@@ -1444,27 +1425,18 @@ namespace qicq {
       V operator()(const dict<K,V>& x) const { return (*this)(x.val()); }
       template <class... T>
       auto operator()(const tuple<T...>& x) const { return x(0_c); }
-      
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
-    struct Flip {
+    struct Flip: Unary {
       template <class T>
       vec<vec<T>> operator()(const vec<vec<T>>& x) const {
         return x.empty()? x :
           Each()([&](size_t i){return x(detail::Hole(),i);})
             (Til()(x.front().size()));
       }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
     
-    struct Group {
+    struct Group: Unary {
       template <class T>
       auto operator()(const vec<T>& x) const {
         const vec<T> k(Distinct()(x));
@@ -1479,13 +1451,9 @@ namespace qicq {
         auto g = (*this)(x.val());
         return make_dict(g.key(), At()(x.key(), g.val()));
       }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
     
-    struct Iasc {
+    struct Iasc: Unary {
       template <class T>
       vec<int64_t> operator()(const vec<T>& x) const {
         Compare c;
@@ -1498,14 +1466,9 @@ namespace qicq {
       }
       
       // TODO use hana::sort.by for tuples
-      
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
   
-    struct Asc {
+    struct Asc: Unary {
       template <class T>
       auto operator()(vec<T> x) const { return x.sort(Compare()); }
       template <class K, class V>
@@ -1513,13 +1476,9 @@ namespace qicq {
         auto i = Iasc()(x.val());
         return make_dict(At()(x.key(),i), At()(x.val(),i));
       }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
-    struct Idesc {
+    struct Idesc: Unary {
       template <class T>
       vec<int64_t> operator()(const vec<T>& x) const {
         Compare c;
@@ -1530,13 +1489,9 @@ namespace qicq {
       auto operator()(const dict<K,V>& x) const {
         return At()(x.key(), (*this)(x.val()));
       }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
-    struct Desc {
+    struct Desc: Unary {
       template <class T>
       auto operator()(vec<T> x) const {
         Compare c;
@@ -1547,10 +1502,6 @@ namespace qicq {
         auto i = Idesc()(x.val());
         return make_dict(At()(x.key(),i), At()(x.val(),i));
       }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
     struct In {
@@ -1614,18 +1565,14 @@ namespace qicq {
       }
     };
 
-    struct Key {
+    struct Key: Unary {
       template <class T>
       vec<int64_t> operator()(const vec<T>& x) const { return Til()(x.size()); }
       template <class K, class V>
       const vec<K>& operator()(const dict<K,V>& x) const { return x.key(); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
     
-    struct Last {
+    struct Last: Unary {
       template <class T>
       T operator()(const vec<T>& x) const {
         assert(x.size());
@@ -1635,11 +1582,6 @@ namespace qicq {
       V operator()(const dict<K,V>& x) const { return (*this)(x.val()); }
       template <class... T>
       auto operator()(const tuple<T...>& x) const { return hana::back(x); }
-
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
     struct Max {
@@ -1684,7 +1626,7 @@ namespace qicq {
       }
     };
 
-    struct Med {
+    struct Med: Unary {
       // TODO med should work like avg on matrices
       template <class T>
       double operator()(vec<T> x) const {
@@ -1695,11 +1637,6 @@ namespace qicq {
       }
       template <class K, class V>
       double operator()(const dict<K,V>& x) const { return (*this)(x.val()); }
-      
-      template <class T>
-      auto operator/(T&& x) { return (*this)(std::forward<T>(x)); }
-      template <class T>
-      auto operator/=(T&& x) { return (*this)(std::forward<T>(x)); }
     };
   
     struct Min {
@@ -1744,7 +1681,7 @@ namespace qicq {
       }
     };
 
-    struct All {
+    struct All: Unary {
       typedef bool converge_type;
 
       template <class T, enable_if_t<!is_vec_v<T>>* = nullptr>
@@ -1761,14 +1698,9 @@ namespace qicq {
       }
       template <class K, class V>
       auto operator()(const dict<K,V>& x) const { return (*this)(x.val()); }
-
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
-    struct Any {
+    struct Any: Unary {
       typedef bool converge_type;
       
       template <class T, enable_if_t<!is_vec_v<T>>* = nullptr>
@@ -1782,10 +1714,6 @@ namespace qicq {
       }
       template <class K, class V>
       auto operator()(const dict<K,V>& x) const { return (*this)(x.val()); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
     struct Match {      
@@ -1890,7 +1818,7 @@ namespace qicq {
       }
     };
 
-    struct Differ {
+    struct Differ: Unary {
       template <class T>
       auto operator()(const vec<T>& x) const {
         auto r = !EachPrior()(Match())(x);
@@ -1901,32 +1829,20 @@ namespace qicq {
       auto operator()(const dict<K,V>& x) const {
         return make_dict(x.key(), (*this)(x.val()));
       }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
     
-    struct Rank {
+    struct Rank: Unary {
       template <class T>
       vec<int64_t> operator()(const vec<T>& x) const {
         return Iasc()(Iasc()(x));
       }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
-    struct Raze {
+    struct Raze: Unary {
       template <class T>
       auto operator()(const vec<T>& x) const {
         return Over()(Join())(x);
       }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
     template <class F>
@@ -1948,7 +1864,7 @@ namespace qicq {
       auto operator()(F&& f) const { return BoundCross<F>(std::forward<F>(f)); }
     };
     
-    struct Reverse {
+    struct Reverse: Unary {
       template <class T>
       vec<T> operator()(const vec<T>& x) const {
         vec<T> r(x);
@@ -1960,11 +1876,6 @@ namespace qicq {
         // k&q reverse both key and value
         return make_dict((*this)(x.key()), (*this)(x.val()));
       }
-      
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
   
     struct Rotate {
@@ -1977,7 +1888,7 @@ namespace qicq {
       }
     };
 
-    struct Signum {
+    struct Signum: Unary {
       template <class T>
       int operator()(const T& x) const { return (0<x)-(x<0); }
       template <class T>
@@ -1986,13 +1897,9 @@ namespace qicq {
       auto operator()(const dict<K,V>& x) const {
         return make_dict(x.key(), (*this)(x.val()));
       }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
   
-    struct Sum {
+    struct Sum: Unary {
       template <class T, enable_if_t<is_arithmetic_v<T>>* = nullptr>
       auto operator()(const vec<T>& x) const {
         return Over()(std::plus<std::common_type_t<int,T>>())(0, x);
@@ -2004,10 +1911,6 @@ namespace qicq {
       }
       template <class K, class V>
       auto operator()(const dict<K,V>& x) const { return (*this)(x.val()); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
     struct Take {
@@ -2156,18 +2059,14 @@ namespace qicq {
       }
     };
 
-    struct Value {
+    struct Value: Unary {
       template <class T>
       const vec<T>& operator()(const vec<T>& x) const { return x; }
       template <class K, class V>
       const vec<V>& operator()(const dict<K,V>& x) const { return x.val(); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
     
-    struct Where {
+    struct Where: Unary {
       template <class T>
       vec<int64_t> operator()(const vec<T>& x) const {
         assert(Over()(Min())(true,0<=x));
@@ -2186,11 +2085,6 @@ namespace qicq {
       vec<K> operator()(const dict<K,V>& x) const {
         return At()(x.key(), (*this)(x.val()));
       }
-          
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/(T&& x) const { return (*this)(std::forward<T>(x)); }
-      template <class T, enable_if_t<!is_non_chain_arg_v<T>>* = nullptr>
-      auto operator/=(T&& x) const { return (*this)(std::forward<T>(x)); }
     };
 
     struct Except {
