@@ -21,6 +21,22 @@
 #error "V2 macro conflict"
 #elif defined V3
 #error "V3 macro conflict"
+#elif defined NLL1
+#error "NLL1 macro conflict"
+#elif defined NLL1
+#error "NLL1 macro conflict"
+#elif defined NLL2
+#error "NLL2 macro conflict"
+#elif defined NLL3
+#error "NLL3 macro conflict"
+#elif defined NLV0
+#error "NLV0 macro conflict"
+#elif defined NLV1
+#error "NLV1 macro conflict"
+#elif defined NLV2
+#error "NLV2 macro conflict"
+#elif defined V3
+#error "NLV3 macro conflict"
 #else
 
 namespace qicq {
@@ -60,6 +76,16 @@ namespace qicq {
 #define V1(expr) qicq::detail::make_l1s([&](auto&& x){expr;})
 #define V2(expr) [&](auto&& x,auto&& y){expr;}
 #define V3(expr) [&](auto&& x,auto&& y,auto&& z){expr;}
+
+// Non-local (i.e., global) versions: no capture spec
+#define NLL0(expr) [](){return expr;}
+#define NLL1(expr) qicq::detail::make_l1s([](auto&& x){return expr;})
+#define NLL2(expr) [](auto&& x,auto&& y){return expr;}
+#define NLL3(expr) [](auto&& x,auto&& y,auto&& z){return expr;}
+#define NLV0(expr) [](){expr;}
+#define NLV1(expr) qicq::detail::make_l1s([](auto&& x){expr;})
+#define NLV2(expr) [](auto&& x,auto&& y){expr;}
+#define NLV3(expr) [](auto&& x,auto&& y,auto&& z){expr;}
 #endif
 
 #endif
