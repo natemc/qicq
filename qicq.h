@@ -96,6 +96,7 @@ namespace qicq {
     operator        std::vector<T>&()       { return v; }
     operator const  std::vector<T>&() const { return v; }
 
+    void clear() { v.clear(); }
     iterator insert(iterator p, const T& t) { return v.insert(p, t); }
     void push_back(const T& t) { v.push_back(t); }
     void reserve(size_type n) { v.reserve(n); }
@@ -169,6 +170,7 @@ namespace qicq {
       std::enable_if_t<!std::is_same<size_t, I>::value>* = nullptr>
     vec(I first, I last): v(first, last) {}
 
+    void clear() { v.clear(); }
     iterator insert(iterator p, bool t) {
       auto i = v.insert(v.begin() + (p-begin()), t);
       return begin() + (i - v.begin());
@@ -226,7 +228,9 @@ namespace qicq {
     explicit dict(const vec<K>& k_): k(k_), v(k_.size()) {}
     dict(const vec<K>& k_, const vec<V>& v_): k(k_), v(v_) {}
     dict(vec<K>&& k_, vec<V>&& v_): k(k_), v(v_) {}
-    
+
+    void clear() { k.clear(); v.clear(); }
+
     bool empty() const { return 0 == size(); }
     size_t size() const { return k.size(); }
     bool has(const K& k_) const {
