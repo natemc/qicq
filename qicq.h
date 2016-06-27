@@ -2413,13 +2413,15 @@ namespace qicq {
   template <class K, class V>
   auto d(const vec<K>& k, const vec<V>& v) { return dict<K,V>(k,v); }
   template <class K, class V>
-  auto d(vec<K>&& k, vec<V>&& v) { return dict<K,V>(k,v); }
+  auto d(vec<K>&& k, vec<V>&& v) {
+    return dict<K,V>(std::move(k),std::move(v));
+  }
 
   template <class... T>
-  auto t(T&&... a) { return tuple<T...>(std::forward<T>(a)...); }
+  auto t(T&&... a) { return tuple<std::decay_t<T>...>(std::forward<T>(a)...); }
 
   template <class... T>
-  detail::Tie<T...> tie(T&... t) { return detail::Tie<T...>(&t...); }
+  auto tie(T&... t) { return detail::Tie<std::decay_t<T>...>(&t...); }
 
   //////////////////////////////////////////////////////////////////////////////
   // Tags
