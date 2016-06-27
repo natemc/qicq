@@ -518,7 +518,7 @@ namespace qicq {
                     "uniform_result_type requires equal arg lengths");
       using hana::type_c;
       auto t0 = type_c<decltype(f(x(0_c),y(0_c)))>;
-      return hana::all_of(std::make_integer_sequence<int,sizeof...(L)>(),
+      return hana::all_of(std::make_index_sequence<sizeof...(L)>(),
                           [&](auto&& i){
                             return type_c<decltype(f(x(i),y(i)))> == t0;});
     }
@@ -530,7 +530,7 @@ namespace qicq {
       assert(x.size() == sizeof...(R));
       using hana::type_c;
       auto t0 = type_c<decltype(f(x(0_c),y(0_c)))>;
-      return hana::all_of(std::make_integer_sequence<int,sizeof...(R)>(),
+      return hana::all_of(std::make_index_sequence<sizeof...(R)>(),
                           [&](auto&& i){
                             return type_c<decltype(f(x(i),y(i)))> == t0;});
     }
@@ -542,7 +542,7 @@ namespace qicq {
       assert(y.size() == sizeof...(L));
       using hana::type_c;
       auto t0 = type_c<decltype(f(x(0_c),y(0_c)))>;
-      return hana::all_of(std::make_integer_sequence<int,sizeof...(L)>(),
+      return hana::all_of(std::make_index_sequence<sizeof...(L)>(),
                           [&](auto&& i){
                             return type_c<decltype(f(x(i),y(i)))> == t0;});
     }
@@ -585,6 +585,16 @@ namespace qicq {
       template <class T, enable_if_t<is_void_result_v<F(T)>>* = nullptr>
       void operator()(const vec<T>& x) const {
         std::for_each(std::begin(x), std::end(x), f);
+      }
+      template <class T, T... N,
+        enable_if_t<is_void_result_v<F(T)>>* = nullptr>
+      void operator()(std::integer_sequence<T,N...> x) const {
+        hana::for_each(x, f);
+      }
+      template <class T, T... N,
+        enable_if_t<!is_void_result_v<F(T)>>* = nullptr>
+      auto operator()(std::integer_sequence<T,N...> x) const {
+        return hana::transform(x, f);
       }
 ////////////////////////////////////////////////////////////////////////////////
       template <class... T>
@@ -1232,6 +1242,38 @@ namespace qicq {
       auto operator()(const dict<K,V>& x) const { return (*this)(x.val()); }
     };
 
+    struct Bin {
+      template <class T, class U>
+      int64_t operator()(const vec<T>& x, const U& y) const {
+        return std::lower_bound(std::begin(x), std::end(x), y) - std::begin(x);
+      }
+      template <class T, class U>
+      auto operator()(const vec<T>& x, const vec<U>& y) const {
+        return EachRight()(*this)(x, y);
+      }
+      template <class T, class K, class V>
+      auto operator()(const vec<T>& x, const dict<K,V>& y) const {
+        return make_dict(y.key(), EachRight()(*this)(x, y.val()));
+      }
+      
+      template <class K, class V, class U>
+      K operator()(const dict<K,V>& x, const U& y) const {
+        const int64_t i = (*this)(x.val(), y);
+        // TODO we need a better answer than K() for not found in dict
+        return i<x.size()? x.key()(i) : K();
+      }
+      template <class K, class V, class U>
+      auto operator()(const dict<K,V>& x, const vec<U>& y) const {
+        return EachRight()(*this)(x, y);
+      }
+      template <class K, class V, class L, class U>
+      auto operator()(const dict<K,V>& x, const dict<L,U>& y) const {
+        return make_dict(y.key(), EachRight()(*this)(x, y.val()));
+      }
+
+      // TODO tuple.  hana::find doesn't do what we want
+    };
+
     struct Bool: Unary {
       template <class T>
       bool operator()(const T& t) const { return t; }
@@ -1433,6 +1475,27 @@ namespace qicq {
         return x.empty()? x :
           Each()([&](size_t i){return x(detail::Hole(),i);})
             (Til()(x.front().size()));
+      }
+      template <class... T>
+      tuple<vec<T>...> operator()(const vec<tuple<T...>>& x) const {
+        tuple<vec<T>...> r;
+        using I = std::make_index_sequence<sizeof...(T)>;
+        Each()([&](auto&& e){hana::for_each(I(), [&](auto&& i) {
+                // hana::at returns &; r(i) returns const& ??
+                hana::at(r,i).push_back(e(i));
+              });})(x);
+        return r;
+        /* return Each()([&](auto&& i){return x(detail::Hole(),i);})(I()); */
+      }
+      template <class... T>
+      vec<tuple<T...>> operator()(const tuple<vec<T>...>& x) const {
+        using I = std::make_index_sequence<sizeof...(T)>;
+        return Each()([&](size_t i){
+            tuple<T...> r;
+            hana::for_each(I(), [&](auto&& j){hana::at(r,j)=x(j)(i);});
+            return r;
+          })
+          (Til()(x(0_c).size()));
       }
     };
     
@@ -1913,6 +1976,20 @@ namespace qicq {
       auto operator()(const dict<K,V>& x) const { return (*this)(x.val()); }
     };
 
+    struct Sums: Unary {
+      template <class T, enable_if_t<is_arithmetic_v<T>>* = nullptr>
+      auto operator()(const vec<T>& x) const {
+        return Scan()(std::plus<std::common_type_t<int,T>>())(0, x);
+      }
+      // For a matrix
+      template <class T, enable_if_t<!is_arithmetic_v<T>>* = nullptr>
+      auto operator()(const vec<T>& x) const {
+        return Scan()(std::plus<T>())(x);
+      }
+      template <class K, class V>
+      auto operator()(const dict<K,V>& x) const { return (*this)(x.val()); }
+    };
+
     struct Take {
       template <class T>
       vec<T> operator()(int64_t n, const T& x) const {
@@ -2372,6 +2449,7 @@ namespace qicq {
   extern detail::Asc      asc;
   extern detail::At       at;
   extern detail::Avg      avg;
+  extern detail::Bin      bin;
   extern detail::Bool     bool_;
   extern detail::Cut      cut;
   extern detail::Deltas   deltas;
@@ -2407,6 +2485,7 @@ namespace qicq {
   extern detail::Signum   signum;
   extern detail::Sublist  sublist;
   extern detail::Sum      sum;
+  extern detail::Sums     sums;
   //extern detail::Sv sv TODO
   extern detail::Take     take;
   extern detail::Til      til;

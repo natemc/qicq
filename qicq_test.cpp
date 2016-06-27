@@ -178,6 +178,15 @@ namespace {
       ASSERT_MATCH(v(2LL,1), v(1,3,5,7,9)/find/v(5,3));},
   };
 
+  hunit::testcase flip_tests[] = {
+    "flip 2d vec is transpose", []{
+      ASSERT_MATCH(v(v(0LL,3),v(1LL,4),v(2LL,5)), flip(v(2,3)/take/til(6)));},
+    "can flip vec<tuple>", []{
+      ASSERT_MATCH(t(v(1,2,3),v("abc")), flip/v(t(1,'a'),t(2,'b'),t(3,'c')));},
+    "can flip tuple<vec>", []{
+      ASSERT_MATCH(v(t(1,'a'),t(2,'b'),t(3,'c')), flip/t(v(1,2,3),v("abc")));},
+  };
+
   hunit::testcase gen_tests[] = {
     "gen invokes its rhs repeatedly (lhs times) and returns the results", []{
       int64_t i=0;
@@ -529,6 +538,7 @@ namespace {
       enlist_tests,
       except_tests,
       find_tests,
+      flip_tests,
       gen_tests,
       group_tests,
       iasc_tests,
@@ -664,7 +674,6 @@ int main (int argc, const char* argv[]) {
   cout << t(v(1,2,3),string("abc"))(0_c) << '\n';
 
   cout << v(v("ace"),v("bdf"))/dot/t(v(0,1),v(1,2)) << '\n';
-  cout << flip(v(2,3)/take/til(6)) << '\n';
 
   std::vector<char> p{'x','y','z','z','y'};
   cout << f(p)/each/til(3) << '\n';

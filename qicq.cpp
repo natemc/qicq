@@ -20,6 +20,7 @@ namespace qicq {
   detail::Asc      asc;
   detail::At       at;
   detail::Avg      avg;
+  detail::Bin      bin;
   detail::Bool     bool_;
   detail::Cut      cut;
   detail::Deltas   deltas;
@@ -55,6 +56,7 @@ namespace qicq {
   detail::Signum   signum;
   detail::Sublist  sublist;
   detail::Sum      sum;
+  detail::Sums     sums;
   //detail::Sv sv TODO
   detail::Take     take;
   detail::Til      til;
