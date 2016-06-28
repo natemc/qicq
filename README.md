@@ -23,6 +23,7 @@ Dyadic (aka binary) function objects can be used infix by placing a forward slas
 #include <iostream>
 #include <qicq.h>
 #include <qicq_lambda.h>
+using namespace qicq;
 using std::cout;
 
 cout << 2/L2(x+y)/3 << '\n'; // 5
