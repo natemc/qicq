@@ -29,7 +29,7 @@ using std::cout;
 cout << 2/L2(x+y)/3 << '\n'; // 5
 ```
 
-This also works for monadic (unary) function objects that inherit qicq::Unary, which includes all the functions in qicq.h:
+This also works for monadic (unary) lambdas defined using the qicq lambda macros as well as function objects that inherit qicq::Unary, which includes all the functions in qicq.h:
 
 ```
 cout << til/5 << '\n';        // 0 1 2 3 4
