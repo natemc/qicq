@@ -35,8 +35,30 @@
 #error "NLV1 macro conflict"
 #elif defined NLV2
 #error "NLV2 macro conflict"
-#elif defined V3
+#elif defined NLV3
 #error "NLV3 macro conflict"
+#elif defined LA_PICK
+#error "LA_PICK macro conflict"
+#elif defined L1A
+#error "L1A macro conflict"
+#elif defined L2A
+#error "L2A macro conflict"
+#elif defined L3A
+#error "L3A macro conflict"
+#elif defined L4A
+#error "L4A macro conflict"
+#elif defined LA
+#error "LA macro conflict"
+#elif defined NLL1A
+#error "NLL1A macro conflict"
+#elif defined NLL2A
+#error "NLL2A macro conflict"
+#elif defined NLL3A
+#error "NLL3A macro conflict"
+#elif defined NLL4A
+#error "NLL4A macro conflict"
+#elif defined NLLA
+#error "NLLA macro conflict"
 #else
 
 namespace qicq {
@@ -86,6 +108,21 @@ namespace qicq {
 #define NLV1(expr) qicq::detail::make_l1s([](auto&& x){expr;})
 #define NLV2(expr) [](auto&& x,auto&& y){expr;}
 #define NLV3(expr) [](auto&& x,auto&& y,auto&& z){expr;}
+
+// user-defined args versions; http://stackoverflow.com/questions/11761703
+#define LA_PICK(_1,_2,_3,_4,_5,NAME,...) NAME
+
+#define L1A(a,expr)       qicq::detail::make_l1s([&](auto&& a){return expr;})
+#define L2A(a,b,expr)     [&](auto&& a,auto&& b){return expr;}
+#define L3A(a,b,c,expr)   [&](auto&& a,auto&& b,auto&& c){return expr;}
+#define L4A(a,b,c,d,expr) [&](auto&& a,auto&& b,auto&& c,auto&& d){return expr;}
+#define LA(...)           LA_PICK(__VA_ARGS__,L4A,L3A,L2A,L1A)(__VA_ARGS__)
+
+#define NLL1A(a,expr)       qicq::detail::make_l1s([&](auto&& a){return expr;})
+#define NLL2A(a,b,expr)     [&](auto&& a,auto&& b){return expr;}
+#define NLL3A(a,b,c,expr)   [&](auto&& a,auto&& b,auto&& c){return expr;}
+#define NLL4A(a,b,c,d,expr) [&](auto&&a,auto&&b,auto&&c,auto&&d){return expr;}
+#define NLLA(...) LA_PICK(__VA_ARGS__,NLL4A,NLL3A,NLL2A,NLL1A)(__VA_ARGS__)
 #endif
 
 #endif
