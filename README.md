@@ -180,7 +180,9 @@ cout << p/dot/t(s("pi"),3.14) << '\n'; // pi:3.14
 
 You can also flip a ```vec<tuple<T...>>``` or a ```tuple<vec<T>...>```:
 
-```assert(v(t(1,'a'),t(2,'b'),t(3,'c'))/match/=flip/t(v(1,2,3),v("abc")));```
+```
+assert(v(t(1,'a'),t(2,'b'),t(3,'c'))/match/=flip/t(v(1,2,3),v("abc")));
+```
 
 ## Literals
 
