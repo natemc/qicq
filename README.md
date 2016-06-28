@@ -3,7 +3,7 @@ qicq ("kick") is a q-inspired C++ library.
 
 #### Motivation
 
-While q (http://code.kx.com) was the inspiration for qicq, Cinder (https://libcinder.org) - a graphics library - was the impetus.  Exploring Cinder, I repeatedly wished to be able to use vector operations to make the code simpler.  For example, using qicq the easing example (https://libcinder.org/docs/guides/opengl/part3.html) on the Cinder site can be made somewhat shorter, and the if and loops removed:
+While q (http://code.kx.com) was the inspiration for qicq, the graphics library [Cinder](https://libcinder.org) was the impetus.  Exploring Cinder, I repeatedly wished to be able to use vector operations to make the code simpler.  For example, using qicq along with a few wrappers to reduce the Cinder boilerplate slightly, [the easing example](https://libcinder.org/docs/guides/opengl/part3.html) on the Cinder site can be made somewhat shorter, and the if and loops removed:
 
 ```
 struct BasicApp: app::App {
@@ -39,6 +39,8 @@ private:
   vec<gl::BatchRef> slices;
 };
 ```
+
+It's still fairly verbose, but the code is straight-forward, and we can think in terms of the whole problem rather than one piece at a time.
 
 #### Dependencies
 
