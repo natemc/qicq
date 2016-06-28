@@ -1,5 +1,48 @@
 # qicq
-qicq ("kick") is a q-inspired C++ library.  qicq depends on boost (any and hana), and the Makefile is currently mac-specific.
+qicq ("kick") is a q-inspired C++ library.
+
+#### Motivation
+
+While q (http://code.kx.com) was the inspiration for qicq, Cinder (https://libcinder.org) - a graphics library - was the impetus.  Exploring Cinder, I repeatedly wished to be able to use vector operations to make the code simpler.  For example, using qicq the easing example (https://libcinder.org/docs/guides/opengl/part3.html) on the Cinder site can be made somewhat shorter, and the if and loops removed:
+
+```
+struct BasicApp: app::App {
+  BasicApp(int n_): n(n_) {}
+  
+  void setup() {
+    using namespace ci::geom;
+    auto shader  = lambertColor();
+    auto slice   = Cube().size(1, 1.0f/n, 1);
+    auto batches = L2(batch(slice>>Translate(x)>>Constant(COLOR,y), shader));
+    auto rel     = til/n/float(n);
+    slices       = L1(vec3(0,x,0))/each/rel/batches/both/=hue/each/rel;
+    cam.look(vec3(2,3,2), vec3(0,.5f,0));
+  }
+  
+  void draw() {
+    constexpr float delay     = 0.25f;
+    constexpr float rotTime   = 1.5f;
+    constexpr float rotOffset = 0.1f;
+    float totalTime = delay + rotTime + n*rotOffset;
+    auto  start     = til/n*rotOffset;
+    auto  end       = start+rotTime;
+    float time      = fmod(app::getElapsedFrames() / 30.0f, totalTime);
+    auto  rotation  = time/within/v(start,end)*(time-start)/rotTime;
+    auto  angle     = f(ci::easeInOutQuint)/each/rotation*float(M_PI)/2.0f;
+    g.clear().zbuf().matrices(cam);
+    angleY/each/angle/V2(PMM(rot(x).draw(y)))/both/slices;
+  }
+    
+private:
+  const int n;
+  Cam cam;
+  vec<gl::BatchRef> slices;
+};
+```
+
+#### Dependencies
+
+qicq depends on boost (any and hana), and the Makefile is currently mac-specific.
 
 ## Lambdas
 
