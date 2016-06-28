@@ -1,5 +1,5 @@
 # qicq
-qicq ("kick") is a C++ library inspired by q.  qicq depends on boost (any and hana), and the Makefile is currently mac-specific.
+qicq ("kick") is a q-inspired C++ library.  qicq depends on boost (any and hana), and the Makefile is currently mac-specific.
 
 ## Lambdas
 
@@ -11,8 +11,8 @@ qicq_lambda.h has a few macros for creating lambdas in a qish way:
 using std::cout; // advise against "using namespace std" due to a few name conflicts
 
 auto f = L2(x+y);       // L2 creates a 2-arg lambda with args x and y
-auto g = LA(p,q,p*q);   // LA creates a lambda w/user specified args
-cout << f(2,3) << '\n'; // 5
+auto g = LA(p,q,p*q);   // LA creates a lambda w/user specified args (up to 4 as of this writing)
+cout << f(2,3) << '\t' << g(4,5) << '\n'; // 5 20
 ```
 
 ## Infix
@@ -35,7 +35,7 @@ cout << til/5 << '\n';        // 0 1 2 3 4
 cout << where/1001_b << '\n'; // 0 3
 ```
 
-Function pointers are a builtin type, and it is impossible to redefine the behavior of C++ operators for builtin types.  So, if you want to use a regular function infix, wrap it in a call to ```f```, which will make a function object out of it:
+Function pointers are a builtin type, and it is impossible to redefine the behavior of C++ operators for builtin types (even when that behavior is illegal or undefined).  So, if you want to use a regular function infix, wrap it in a call to ```f```, which will make a function object out of it:
 
 ```
 int add(int x, int y) { return x+y; }
@@ -53,7 +53,7 @@ With C++ precedence and associativity rules, you can force right-to-left evaluat
 auto x = sum/=7/take/=1.0/7; // x is not quite 1.0
 ```
 
-Keep in mind that the only opereator with lower precedence than the assignment operators is the comma operator.  So, when using ```/=``` you will sometimes need () around the subexpression:
+Keep in mind that the only opereator with lower precedence than the assignment operators is the comma operator.  So, when using ```/=``` in a subexpression you will usually need () around the subexpression:
 
 ```
 cout << (sum/=7/take/=1.0/7) << '\n';
@@ -127,7 +127,7 @@ auto f = many(L3(x+y+z));
 cout << f(v(1,2,3),v(10,20,30),v(100,200,300)) << '\n'; // 111 222 333
 ```
 
-I'm considering merging ```both``` and ```many``` into ```each```; the reason to separate them is it reduces the number of overloads which makes compiler error reports shorter.
+I'm considering merging ```both``` and ```many``` into ```each```; the reason to separate them is it reduces the number of overloads considered during lookup which makes compiler error reports shorter.
 
 Meanwhile, ```cross``` is an adverb in qicq:
 
@@ -158,7 +158,7 @@ auto b = d(v("a"_m,"b"_m),v(1,2)); // dict<sym,int>
 auto c = t(1,"abc");               // tuple<int,const char*>
 ```
 
-Indexing, arithmetic, and relational operators support dicts.  Most of the functions implemented so far also support dicts:
+Currently, vecs are supported wherever it makes sense.  Indexing, arithmetic, and relational operators support dicts.  Most of the functions implemented so far also support dicts:
 
 ```
 cout << group/d(s/each/v("abcdefghijklmnopqrst"),
@@ -206,5 +206,7 @@ The quickest way to see a list of functions implemented so far is to open up qic
 * Tables
 * Improve compiler error messages (usually they are several pages)
 * Completeness
+
+One idea that may be worth exploring is wrapper types for all the builtin types (e.g., qicq::Int etc).  That would allow overloading operators in more interesting ways (in particular, it would be nice if & and | were dyadic min and max rather than the corresponding bit operations).  With user-defined literals (_j, _f, etc) it might not be as painful as it seems.
 
 Also, no effort has been made to make qicq fast or to memory efficient.
