@@ -11,6 +11,7 @@ qicq_lambda.h has a few macros for creating lambdas in a qish way:
 using std::cout; // advise against "using namespace std" due to a few name conflicts
 
 auto f = L2(x+y);       // L2 creates a 2-arg lambda with args x and y
+auto g = LA(p,q,p*q);   // LA creates a lambda w/user specified args
 cout << f(2,3) << '\n'; // 5
 ```
 
@@ -27,6 +28,13 @@ using std::cout;
 cout << 2/L2(x+y)/3 << '\n'; // 5
 ```
 
+This also works for monadic (unary) function objects that inherit qicq::Unary, which includes all the functions in qicq.h:
+
+```
+cout << til/5 << '\n';        // 0 1 2 3 4
+cout << where/1001_b << '\n'; // 0 3
+```
+
 Function pointers are a builtin type, and it is impossible to redefine the behavior of C++ operators for builtin types.  So, if you want to use a regular function infix, wrap it in a call to ```f```, which will make a function object out of it:
 
 ```
@@ -35,13 +43,7 @@ int add(int x, int y) { return x+y; }
 cout << 3/f(add)/4 << '\n';           // 7
 ```
 
-The monadic (unary) qicq function objects all support similar syntax:
-
-```
-cout << til/5 << '\n'; // 0 1 2 3 4
-```
-
-Beware, however: C++ precedence rules still apply, and you will sometimes find it easier to use ().
+Beware: C++ precedence rules still apply, and you will sometimes find it easier to use ().
 
 ## Right-to-left expression evaluation
 
@@ -99,7 +101,7 @@ qicq's containers can also be indexed using the ```at``` function:
 cout << v("abcdefghij")/at/v((1,3,5),v(2,4,6)) << '\n'; // bdf ceg
 ```
 
-qicq's dot function needs a tuple on the rhs when used to index a container, because the return type is different depending on the size of the rhs.
+qicq's ```dot``` function needs a tuple on the rhs when used to index a container, because the return type is different depending on the size of the rhs.
 
 ```
 cout << v(v("ace"),v("bdf"))/dot/t(v(0,1),v(2,1)) << '\n'; // ec fd
@@ -140,7 +142,7 @@ Functions are generally all different types, so you have to put them in a tuple 
 cout << (t(min,max)/at/left/right/=v(3,3)/take/=til/9) << '\n'; // (0 2) (3 5) (6 8)
 ```
 
-The plan for extended overloads is to name them differently.  So far, qicq only supports converge:
+The plan for extended overloads is to name them differently.  So far, qicq only supports (a limited form of) converge:
 
 ```
 cout << all/conv/(til(3)/L2(x*y)/left/til(3) << '\n'; // 0
@@ -168,13 +170,17 @@ cout << group/d(s/each/v("abcdefghijklmnopqrst"),
 // 3| ,h
 ```
 
-Tuples are mostly experimental at this point and have limited support.  However, you can use dot to apply a function to a tuple:
+Tuples have limited support so far.  You can use ```dot``` to apply a function to a tuple:
 
 ```
 auto p = [](const sym& s, double x){
   std::ostringstream os; os << s << ':' << x; return os.str();};
 cout << p/dot/t(s("pi"),3.14) << '\n'; // pi:3.14
 ```
+
+You can also flip a ```vec<tuple<T...>>``` or a ```tuple<vec<T>...>```:
+
+```assert(v(t(1,'a'),t(2,'b'),t(3,'c'))/match/=flip/t(v(1,2,3),v("abc")));```
 
 ## Literals
 
@@ -193,3 +199,12 @@ assert(v(true,false,true) == 101_b);
 ## Which functions are implemented?
 
 The quickest way to see a list of functions implemented so far is to open up qicq.cpp.
+
+## TODO
+
+* Nulls
+* Tables
+* Improve compiler error messages (usually they are several pages)
+* Completeness
+
+Also, no effort has been made to make qicq fast or to memory efficient.
