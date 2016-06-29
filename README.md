@@ -61,7 +61,7 @@ qicq depends on boost (any and hana), and the Makefile is currently mac-specific
 <a id='lambdas'></a>
 ## Lambdas
 
-qicq_lambda.h has a few macros for creating lambdas in a qish way:
+qicq_lambda.h has a few macros for creating lambdas in a q-ish way:
 
 ``` C++
 #include <iostream>
