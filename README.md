@@ -15,7 +15,7 @@ qicq ("kick") is a q-inspired C++ library.
 
 ### Motivation
 
-While [q](http://code.kx.com) was the inspiration for qicq, the graphics library [Cinder](https://libcinder.org) was the impetus.  Exploring Cinder, I repeatedly wished to be able to use vector operations to make the code simpler.  For example, using qicq along with a few wrappers to reduce the Cinder boilerplate slightly, [the easing example](https://libcinder.org/docs/guides/opengl/part3.html) on the Cinder site can be made somewhat shorter, and the if and loops removed:
+While [q](http://code.kx.com) was the inspiration for qicq, the graphics library [Cinder](https://libcinder.org) was the impetus.  Exploring Cinder, I repeatedly wished to be able to use vector operations to make the code simpler.  For example, using qicq along with a few wrappers to reduce the Cinder boilerplate slightly, [the easing example](https://libcinder.org/docs/guides/opengl/part3.html) (scroll down to the last example - the one that looks like a stack of rotating post-it notes) on the Cinder site can be made somewhat shorter, and the if and loops removed:
 
 ``` C++
 struct BasicApp: app::App {
