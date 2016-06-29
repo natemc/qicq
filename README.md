@@ -52,7 +52,7 @@ private:
 };
 ```
 
-It's still fairly verbose, but the code is straight-forward, and we can think in terms of the whole problem rather than one piece at a time.
+It's still fairly verbose, but the code is straightforward, and we can think in terms of the whole problem rather than one piece at a time.
 
 ### Dependencies
 
