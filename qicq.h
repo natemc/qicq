@@ -111,8 +111,6 @@ namespace qicq {
     const_reference front() const { return v.front(); }
     reference       back ()       { return v.back(); }
     const_reference back () const { return v.back(); }
-    //    reference       operator[](size_type i)       { return v[i]; }
-    //    const_reference operator[](size_type i) const { return v[i]; }
     
     reference       operator()(size_type i)       { return v[i]; }
     const_reference operator()(size_type i) const { return v[i]; }
