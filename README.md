@@ -15,7 +15,7 @@ qicq ("kick") is a q-inspired C++ library.
 
 ### Motivation
 
-While q (http://code.kx.com) was the inspiration for qicq, the graphics library [Cinder](https://libcinder.org) was the impetus.  Exploring Cinder, I repeatedly wished to be able to use vector operations to make the code simpler.  For example, using qicq along with a few wrappers to reduce the Cinder boilerplate slightly, [the easing example](https://libcinder.org/docs/guides/opengl/part3.html) on the Cinder site can be made somewhat shorter, and the if and loops removed:
+While [q](http://code.kx.com) was the inspiration for qicq, the graphics library [Cinder](https://libcinder.org) was the impetus.  Exploring Cinder, I repeatedly wished to be able to use vector operations to make the code simpler.  For example, using qicq along with a few wrappers to reduce the Cinder boilerplate slightly, [the easing example](https://libcinder.org/docs/guides/opengl/part3.html) (scroll down to the last example - the one that looks like a stack of rotating post-it notes) on the Cinder site can be made somewhat shorter, and the if and loops removed:
 
 ``` C++
 struct BasicApp: app::App {
@@ -52,7 +52,7 @@ private:
 };
 ```
 
-It's still fairly verbose, but the code is straight-forward, and we can think in terms of the whole problem rather than one piece at a time.
+It's still fairly verbose, but the code is straightforward, and we can think in terms of the whole problem rather than one piece at a time.
 
 ### Dependencies
 
@@ -61,7 +61,7 @@ qicq depends on boost (any and hana), and the Makefile is currently mac-specific
 <a id='lambdas'></a>
 ## Lambdas
 
-qicq_lambda.h has a few macros for creating lambdas in a qish way:
+qicq_lambda.h has a few macros for creating lambdas in a q-ish way:
 
 ``` C++
 #include <iostream>
@@ -108,7 +108,7 @@ Beware: C++ precedence rules still apply, and you will sometimes find it easier 
 <a id='r2l'></a>
 ## Right-to-left expression evaluation
 
-With C++ precedence and associativity rules, you can force right-to-left evaluation with compound assignment; qicq supports this with the `/=` operator:
+With C++ precedence and associativity rules, you can force right-to-left evaluation with compound assignment; qicq supports this via the `/=` operator:
 
 ``` C++
 auto x = sum/=7/take/=1.0/7; // x is not quite 1.0
