@@ -108,7 +108,7 @@ Beware: C++ precedence rules still apply, and you will sometimes find it easier 
 <a id='r2l'></a>
 ## Right-to-left expression evaluation
 
-With C++ precedence and associativity rules, you can force right-to-left evaluation with compound assignment; qicq supports this with the `/=` operator:
+With C++ precedence and associativity rules, you can force right-to-left evaluation with compound assignment; qicq supports this via the `/=` operator:
 
 ``` C++
 auto x = sum/=7/take/=1.0/7; // x is not quite 1.0
