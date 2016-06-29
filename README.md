@@ -283,6 +283,7 @@ assert(v(true,false,true) == 101_b);
 * Tables
 * Improve compiler error messages (usually they are several pages)
 * Completeness
+* Cross-platform build/install
 
 One idea that may be worth exploring is wrapper types for all the builtin types (e.g., qicq::Int etc).  That would allow overloading operators in more interesting ways (in particular, it would be nice if & and | were dyadic min and max rather than the corresponding bit operations).  With user-defined literals (`_j`, `_f`, etc) it might not be as painful as it seems.
 
