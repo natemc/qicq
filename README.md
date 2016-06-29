@@ -4,6 +4,14 @@ qicq ("kick") is a q-inspired C++ library.
 ### Features
 
 [Lambdas](#lambdas)
+[Infix](#infix)
+[Right-to-left expression evaluation](#r2l)
+[Uniform](#uniform)
+[Atomic operations](#atomic)
+[Adverbs](#adverbs)
+[Containers](#containers)
+[Literals](#lit)
+[Todo](#todo)
 
 ### Motivation
 
@@ -64,7 +72,7 @@ auto g = LA(p,q,p*q);   // LA creates a lambda w/user specified args (up to 4 as
 cout << f(2,3) << '\t' << g(4,5) << '\n'; // 5 20
 ```
 
-## Infix
+## Infix <a id='infix'></a>
 
 Dyadic (aka binary) function objects can be used infix by placing a forward slash before and behind:
 
@@ -95,7 +103,7 @@ cout << 3/f(add)/4 << '\n';           // 7
 
 Beware: C++ precedence rules still apply, and you will sometimes find it easier to use ().
 
-## Right-to-left expression evaluation
+## Right-to-left expression evaluation <a id='r2l'></a>
 
 With C++ precedence and associativity rules, you can force right-to-left evaluation with compound assignment; qicq supports this with the `/=` operator:
 
@@ -109,7 +117,7 @@ Keep in mind that the only opereator with lower precedence than the assignment o
 cout << (sum/=7/take/=1.0/7) << '\n';
 ```
 
-## Atomic operations
+## Atomic operations <a id='atomic'></a>
 
 qicq's vecs and dicts respond to arithmetic and relational operators by automatically vectorizing:
 
@@ -123,7 +131,7 @@ cout << 1+til/5 << '\n';           // 1 2 3 4 5
 cout << where(0==til/5%2) << '\n'; // 0 2 4
 ```
 
-## Uniform Application & Indexing
+## Uniform Application & Indexing <a id='uniform'></a>
 
 Containers are functions, so you index them using `operator()`:
 
@@ -157,7 +165,7 @@ qicq's `dot` function needs a tuple on the rhs when used to index a container, b
 cout << v(v("ace"),v("bdf"))/dot/t(v(0,1),v(2,1)) << '\n'; // ec fd
 ```
 
-## Adverbs
+## Adverbs <a id='adverbs'></a>
 
 qicq supports the 7 adverbs of q:
 
@@ -200,7 +208,7 @@ cout << all/conv/(til(3)/L2(x*y)/left/til(3) << '\n'; // 0
 
 The `match` function (which `conv` uses) does fuzzy matching for doubles.
 
-## Containers
+## Containers <a id='containers'></a>
 
 ``` C++
 auto a = v(1,2,3);                 // vec<int>
@@ -234,7 +242,7 @@ You can also flip a `vec<tuple<T...>>` or a `tuple<vec<T>...>`:
 assert(v(t(1,'a'),t(2,'b'),t(3,'c'))/match/=flip/t(v(1,2,3),v("abc")));
 ```
 
-## Literals
+## Literals <a id='lit'></a>
 
 You can create a symbol via either the `s` function or the `_s` literal:
 
@@ -248,11 +256,7 @@ You can create a `vec<bool>` using `_b`:
 assert(v(true,false,true) == 101_b);
 ```
 
-## Which functions are implemented?
-
-The quickest way to see a list of functions implemented so far is to open up qicq.cpp.
-
-## TODO
+## Todo <a id='todo'></a>
 
 * Nulls
 * Tables
@@ -262,3 +266,7 @@ The quickest way to see a list of functions implemented so far is to open up qic
 One idea that may be worth exploring is wrapper types for all the builtin types (e.g., qicq::Int etc).  That would allow overloading operators in more interesting ways (in particular, it would be nice if & and | were dyadic min and max rather than the corresponding bit operations).  With user-defined literals (`_j`, `_f`, etc) it might not be as painful as it seems.
 
 Also, no effort has been made to make qicq fast or to memory efficient.
+
+#### Which functions are implemented?
+
+The quickest way to see a list of functions implemented so far is to open up qicq.cpp.
