@@ -11,7 +11,7 @@ qicq ("kick") is a q-inspired C++ library.
 * [Adverbs](#adverbs)
 * [Containers](#containers)
 * [Literals](#lit)
-* [Todo](#todo)
+* [To do](#todo)
 
 ### Motivation
 
@@ -58,7 +58,8 @@ It's still fairly verbose, but the code is straight-forward, and we can think in
 
 qicq depends on boost (any and hana), and the Makefile is currently mac-specific.
 
-## Lambdas <a id='lambdas'></a>
+<a id='lambdas'></a>
+## Lambdas
 
 qicq_lambda.h has a few macros for creating lambdas in a qish way:
 
@@ -72,7 +73,8 @@ auto g = LA(p,q,p*q);   // LA creates a lambda w/user specified args (up to 4 as
 cout << f(2,3) << '\t' << g(4,5) << '\n'; // 5 20
 ```
 
-## Infix <a id='infix'></a>
+<a id='infix'></a>
+## Infix
 
 Dyadic (aka binary) function objects can be used infix by placing a forward slash before and behind:
 
@@ -103,7 +105,8 @@ cout << 3/f(add)/4 << '\n';           // 7
 
 Beware: C++ precedence rules still apply, and you will sometimes find it easier to use ().
 
-## Right-to-left expression evaluation <a id='r2l'></a>
+<a id='r2l'></a>
+## Right-to-left expression evaluation
 
 With C++ precedence and associativity rules, you can force right-to-left evaluation with compound assignment; qicq supports this with the `/=` operator:
 
@@ -117,7 +120,8 @@ Keep in mind that the only opereator with lower precedence than the assignment o
 cout << (sum/=7/take/=1.0/7) << '\n';
 ```
 
-## Atomic operations <a id='atomic'></a>
+<a id='atomic'></a>
+## Atomic operations
 
 qicq's vecs and dicts respond to arithmetic and relational operators by automatically vectorizing:
 
@@ -165,7 +169,8 @@ qicq's `dot` function needs a tuple on the rhs when used to index a container, b
 cout << v(v("ace"),v("bdf"))/dot/t(v(0,1),v(2,1)) << '\n'; // ec fd
 ```
 
-## Adverbs <a id='adverbs'></a>
+<a id='adverbs'></a>
+## Adverbs
 
 qicq supports the 7 adverbs of q:
 
@@ -208,7 +213,8 @@ cout << all/conv/(til(3)/L2(x*y)/left/til(3) << '\n'; // 0
 
 The `match` function (which `conv` uses) does fuzzy matching for doubles.
 
-## Containers <a id='containers'></a>
+<a id='containers'></a>
+## Containers
 
 ``` C++
 auto a = v(1,2,3);                 // vec<int>
@@ -242,7 +248,8 @@ You can also flip a `vec<tuple<T...>>` or a `tuple<vec<T>...>`:
 assert(v(t(1,'a'),t(2,'b'),t(3,'c'))/match/=flip/t(v(1,2,3),v("abc")));
 ```
 
-## Literals <a id='lit'></a>
+<a id='lit'></a>
+## Literals
 
 You can create a symbol via either the `s` function or the `_s` literal:
 
@@ -256,7 +263,8 @@ You can create a `vec<bool>` using `_b`:
 assert(v(true,false,true) == 101_b);
 ```
 
-## Todo <a id='todo'></a>
+<a id='todo'></a>
+## To do
 
 * Nulls
 * Tables
