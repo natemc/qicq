@@ -50,7 +50,7 @@ It's still fairly verbose, but the code is straight-forward, and we can think in
 
 qicq depends on boost (any and hana), and the Makefile is currently mac-specific.
 
-## [Lambdas]<a id='lambdas'></a>
+## Lambdas <a id='lambdas'></a>
 
 qicq_lambda.h has a few macros for creating lambdas in a qish way:
 
