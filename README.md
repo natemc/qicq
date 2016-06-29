@@ -173,7 +173,7 @@ cout << v(v("ace"),v("bdf"))/dot/t(v(0,1),v(2,1)) << '\n'; // ec fd
 <a id='adverbs'></a>
 ## Adverbs
 
-qicq supports the 7 adverbs of q:
+qicq supports the [adverbs of q](http://code.kx.com/wiki/Reference/Adverb):
 
 ``` C++
 cout << L1(2*x)/each/til(5) << '\n';                     // 0 2 4 6 8
