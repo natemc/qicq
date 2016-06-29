@@ -56,7 +56,7 @@ It's still fairly verbose, but the code is straightforward, and we can think in 
 
 ### Dependencies
 
-qicq depends on boost (any and hana), and the Makefile is currently mac-specific.
+qicq depends on [boost](http://www.boost.org/) ([any](http://www.boost.org/doc/libs/1_61_0/doc/html/any.html) and [hana](http://www.boost.org/doc/libs/1_61_0/libs/hana/doc/html/index.html)), and the Makefile is currently mac-specific.
 
 <a id='lambdas'></a>
 ## Lambdas
