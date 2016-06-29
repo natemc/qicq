@@ -60,7 +60,7 @@ qicq depends on [boost](http://www.boost.org/) ([any](http://www.boost.org/doc/l
 
 You also need a relatively recent C++ compiler, since qicq uses C++14 features.
 
-### Installaion
+### Installation
 
 ```
 $ git clone https://github.com/natemc/qicq.git
