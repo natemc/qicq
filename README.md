@@ -3,15 +3,15 @@ qicq ("kick") is a q-inspired C++ library.
 
 ### Features
 
-[Lambdas](#lambdas)
-[Infix](#infix)
-[Right-to-left expression evaluation](#r2l)
-[Uniform](#uniform)
-[Atomic operations](#atomic)
-[Adverbs](#adverbs)
-[Containers](#containers)
-[Literals](#lit)
-[Todo](#todo)
+* [Lambdas](#lambdas)
+* [Infix](#infix)
+* [Right-to-left expression evaluation](#r2l)
+* [Uniform](#uniform)
+* [Atomic operations](#atomic)
+* [Adverbs](#adverbs)
+* [Containers](#containers)
+* [Literals](#lit)
+* [Todo](#todo)
 
 ### Motivation
 
