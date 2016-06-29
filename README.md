@@ -6,7 +6,7 @@ qicq ("kick") is a q-inspired C++ library.
 * [Lambdas](#lambdas)
 * [Infix](#infix)
 * [Right-to-left expression evaluation](#r2l)
-* [Uniform](#uniform)
+* [Uniform Application & Indexing](#uniform)
 * [Atomic operations](#atomic)
 * [Adverbs](#adverbs)
 * [Containers](#containers)
@@ -135,7 +135,8 @@ cout << 1+til/5 << '\n';           // 1 2 3 4 5
 cout << where(0==til/5%2) << '\n'; // 0 2 4
 ```
 
-## Uniform Application & Indexing <a id='uniform'></a>
+<a id='uniform'></a>
+## Uniform Application & Indexing
 
 Containers are functions, so you index them using `operator()`:
 
